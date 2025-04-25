@@ -1,25 +1,23 @@
 // jwt-backend-session/index.js
 import express from 'express';
-import jwt from 'jsonwebtoken';
-import NodeCache from 'node-cache';
 import timeout from 'connect-timeout';
 import dotenv from 'dotenv';
-import { authRouter } from './routes/authRouter';
+
+import { authRouter } from './routes/authRouter.js';
 
 //import { detectLanguage } from './language';
-import { requestLogger } from './middleware/logger';
-import { limiter } from './middleware/rateLimit';
-import { requestTimeOut } from './middleware/timeOut';
-import { sanitizeRequest } from './middleware/sanitizeRequest';
-import { invalidRoute } from './middleware/invalidRoute';
-import { jsonErrorHandler } from './middleware/jsonErrorHandler';
+import { requestLogger } from './middleware/logger.js';
+import { limiter } from './middleware/rateLimit.js';
+import { requestTimeOut } from './middleware/timeOut.js';
+import { sanitizeRequest } from './middleware/sanitizeRequest.js';
+import { invalidRoute } from './middleware/invalidRoute.js';
+import { jsonErrorHandler } from './middleware/jsonErrorHandler.js';
 
 dotenv.config();
 
 const app = express();
-const cache = new NodeCache();
+
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'tu_clave_super_secreta';
 
 // Middleware para controlar el tiempo maximo de espera por cada petición
 app.use(timeout('15s'));

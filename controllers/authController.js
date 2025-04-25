@@ -1,5 +1,18 @@
+import jwt from 'jsonwebtoken';
+import NodeCache from 'node-cache';
+import { createResponse } from '../utils/requestRespose.js';
+
+const cache = new NodeCache();
+const JWT_SECRET = process.env.JWT_SECRET || 'tu_clave_super_secreta';
+
 export const root = (req, res) => {
-  res.json({ message: 'Bienvenido al JWT Backend' });
+  res.json(
+    createResponse(
+      true,
+      process.env.ACTIONS_DO_NOTHING,
+      'Welcome to n8n backend api management',
+    ),
+  );
 };
 
 export const generateToken = (req, res) => {

@@ -1,5 +1,5 @@
-
 // jwt-backend-session/language.js
+// en caso de que esta falle usar fastText
 import cldFactory from 'cld3-asm';
 
 let detectorInstance = null;

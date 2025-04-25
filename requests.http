@@ -1,0 +1,4 @@
+@api_url = http://localhost:{{$dotenv PORT}}
+
+###
+GET {{api_url}}

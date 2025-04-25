@@ -46,7 +46,7 @@ doc/
 
 # dotenv environment variables files
 .env
-.env.*
+
 
 # next.js build output
 .next/
