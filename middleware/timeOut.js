@@ -12,3 +12,8 @@ export const requestTimeOut = (req, res, next) => {
   }
   next();
 };
+
+// Middleware para detener el procesamiento de solicitudes con timeout
+export const haltOnTimedout = (req, res, next) => {
+  if (!req.timedout) next();
+};

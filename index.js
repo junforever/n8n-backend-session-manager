@@ -8,7 +8,7 @@ import { authRouter } from './routes/authRouter.js';
 //import { detectLanguage } from './language';
 import { requestLogger } from './middleware/logger.js';
 import { limiter } from './middleware/rateLimit.js';
-import { requestTimeOut } from './middleware/timeOut.js';
+import { requestTimeOut, haltOnTimedout } from './middleware/timeOut.js';
 import { sanitizeRequest } from './middleware/sanitizeRequest.js';
 import { invalidRoute } from './middleware/invalidRoute.js';
 import { jsonErrorHandler } from './middleware/jsonErrorHandler.js';
@@ -20,10 +20,13 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware para controlar el tiempo maximo de espera por cada petición
-app.use(timeout(process.env.REQUEST_TIMEOUT));
+app.use(timeout(process.env.REQUEST_TIMEOUT || '15s'));
+
+// Middleware para detener el procesamiento de solicitudes con timeout
+app.use(haltOnTimedout);
 
 // Middleware para controlar el tamaño maximo del body
-app.use(express.json({ limit: process.env.REQUEST_MAX_BODY_SIZE }));
+app.use(express.json({ limit: process.env.REQUEST_MAX_BODY_SIZE || '10kb' }));
 
 // Middleware para controlar el limite de peticiones por usuario
 app.use(limiter);
