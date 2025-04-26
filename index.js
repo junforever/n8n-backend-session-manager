@@ -20,10 +20,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware para controlar el tiempo maximo de espera por cada petición
-app.use(timeout('15s'));
+app.use(timeout(process.env.REQUEST_TIMEOUT));
 
 // Middleware para controlar el tamaño maximo del body
-app.use(express.json({ limit: '10kb' }));
+app.use(express.json({ limit: process.env.REQUEST_MAX_BODY_SIZE }));
 
 // Middleware para controlar el limite de peticiones por usuario
 app.use(limiter);
@@ -49,5 +49,5 @@ app.use('/', authRouter);
 app.use(invalidRoute);
 
 app.listen(PORT, () => {
-  console.log(`JWT Backend corriendo en http://localhost:${PORT}`);
+  console.log(`JWT Backend runing on http://localhost:${PORT}`);
 });
