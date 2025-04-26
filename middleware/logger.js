@@ -16,13 +16,14 @@ const transport = new DailyRotateFile({
 // Crear el logger con el transporte configurado
 const logger = winston.createLogger({
   level: 'error', // Nivel de log (solo errores)
-  format: winston.format.combine(
-    winston.format.printf(({ level, message }) => {
-      return `${timestamp} [${level.toUpperCase()}]: ${message}`;
-    }),
-    winston.format.json(), // Los logs se guardarán en formato JSON
-  ),
-  transports: [transport], // Solo guardar en archivos (no consola)
+  format: winston.format.json(), // Los logs se guardarán en formato JSON
+
+  transports: [
+    // guardar en archivos de transporte
+    transport,
+    // guardar en consola
+    new winston.transports.Console(),
+  ],
 });
 
 export function requestLogger(req, res, next) {
@@ -52,9 +53,9 @@ export function requestLogger(req, res, next) {
       responseData: responseBody?.data || 'N/A', // Capturar el campo data de la respuesta
     };
 
-    //console.log(JSON.stringify(log));
     // Guardar el log solo si hay un error (status >= 400)
     if (res.statusCode >= 400) {
+      //console.log(JSON.stringify(log));
       logger.error(log); // Registrar error en el archivo
     }
   });
