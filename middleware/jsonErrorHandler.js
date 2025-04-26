@@ -18,7 +18,7 @@ export const jsonErrorHandler = (err, req, res, next) => {
       createResponse(
         false,
         process.env.ACTIONS_CHAT_ALERT_NOTIFICATION,
-        'Internal server error : ${req.originalUrl}',
+        `Internal server error : ${req.originalUrl}`,
       ),
     );
 };

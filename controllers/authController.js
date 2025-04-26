@@ -15,6 +15,7 @@ export const root = (req, res) => {
   );
 };
 
+//TODO: usar la funcion createResponse para la respuesta
 export const generateToken = (req, res) => {
   const { userId, role } = req.body;
   if (!userId || !role)
@@ -32,6 +33,7 @@ export const generateToken = (req, res) => {
   res.json({ token });
 };
 
+//TODO: usar la funcion createResponse para la respuesta
 export const verifyToken = (req, res) => {
   const { token } = req.body;
   if (!token)
