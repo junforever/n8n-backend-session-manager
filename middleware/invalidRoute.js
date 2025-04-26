@@ -5,7 +5,7 @@ export const invalidRoute = (req, res) => {
     .json(
       createResponse(
         false,
-        process.env.ACTIONS_CHAT_ALERT_NOTIFICATION,
+        process.env.ACTIONS_CHAT_ALERT_NOTIFICATION || 'alert',
         `Invalid route: ${req.originalUrl}`,
       ),
     );

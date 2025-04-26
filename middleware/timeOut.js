@@ -5,7 +5,7 @@ export const requestTimeOut = (req, res, next) => {
       .json(
         createResponse(
           false,
-          process.env.ACTIONS_CHAT_ALERT_NOTIFICATION,
+          process.env.ACTIONS_CHAT_ALERT_NOTIFICATION || 'alert',
           `Timeout reached - Method: ${req.method} Url: ${req.originalUrl}`,
         ),
       );

@@ -7,7 +7,7 @@ export const jsonErrorHandler = (err, req, res, next) => {
       .json(
         createResponse(
           false,
-          process.env.ACTIONS_CHAT_ALERT_NOTIFICATION,
+          process.env.ACTIONS_CHAT_ALERT_NOTIFICATION || 'alert',
           `Invalid JSON format in request: ${req.originalUrl}`,
         ),
       );
@@ -17,7 +17,7 @@ export const jsonErrorHandler = (err, req, res, next) => {
     .json(
       createResponse(
         false,
-        process.env.ACTIONS_CHAT_ALERT_NOTIFICATION,
+        process.env.ACTIONS_CHAT_ALERT_NOTIFICATION || 'alert',
         `Internal server error : ${req.originalUrl}`,
       ),
     );
