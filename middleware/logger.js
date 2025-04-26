@@ -17,7 +17,9 @@ const transport = new DailyRotateFile({
 const logger = winston.createLogger({
   level: 'error', // Nivel de log (solo errores)
   format: winston.format.combine(
-    timestamp,
+    winston.format.printf(({ level, message }) => {
+      return `${timestamp} [${level.toUpperCase()}]: ${message}`;
+    }),
     winston.format.json(), // Los logs se guardarán en formato JSON
   ),
   transports: [transport], // Solo guardar en archivos (no consola)
