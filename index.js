@@ -1,4 +1,3 @@
-// jwt-backend-session/index.js
 import express from 'express';
 import timeout from 'connect-timeout';
 import dotenv from 'dotenv';
@@ -25,6 +24,9 @@ app.use(timeout(process.env.REQUEST_TIMEOUT || '15s'));
 // Middleware para detener el procesamiento de solicitudes con timeout
 app.use(haltOnTimedout);
 
+// Middleware para manejar errores de timeout
+app.use(requestTimeOut);
+
 // Middleware para controlar el tamaño maximo del body
 app.use(express.json({ limit: process.env.REQUEST_MAX_BODY_SIZE || '10kb' }));
 
@@ -33,9 +35,6 @@ app.use(limiter);
 
 // Middleware para logging
 app.use(requestLogger);
-
-// Middleware para manejar errores de timeout
-app.use(requestTimeOut);
 
 // Middleware para manejar errores JSON
 app.use(jsonErrorHandler);
@@ -52,5 +51,5 @@ app.use('/', authRouter);
 app.use(invalidRoute);
 
 app.listen(PORT, () => {
-  console.log(`JWT Backend runing on http://localhost:${PORT}`);
+  console.log(`JWT Backend running on http://localhost:${PORT}`);
 });
