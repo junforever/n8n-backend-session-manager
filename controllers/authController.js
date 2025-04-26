@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import NodeCache from 'node-cache';
-import { createResponse } from '../utils/requestRespose.js';
+import { createResponse } from '../utils/requestResponse.js';
 
 const cache = new NodeCache();
 const JWT_SECRET = process.env.JWT_SECRET || 'my_super_secret_phrase';

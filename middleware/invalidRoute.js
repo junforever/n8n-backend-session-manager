@@ -1,4 +1,4 @@
-import { createResponse } from '../utils/requestRespose.js';
+import { createResponse } from '../utils/requestResponse.js';
 export const invalidRoute = (req, res) => {
   res
     .status(404)

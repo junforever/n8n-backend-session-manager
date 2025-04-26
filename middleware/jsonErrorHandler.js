@@ -1,4 +1,4 @@
-import { createResponse } from '../utils/requestRespose.js';
+import { createResponse } from '../utils/requestResponse.js';
 
 export const jsonErrorHandler = (err, req, res, next) => {
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
