@@ -9,7 +9,15 @@ const JWT_SECRET = process.env.JWT_SECRET || 'my_super_secret_phrase';
 export const generateToken = (req, res) => {
   const { userId, role } = req.body;
   if (!userId || !role)
-    return res.status(400).json({ error: 'userId y role requeridos' });
+    return res
+      .status(400)
+      .json(
+        createResponse(
+          false,
+          process.env.ACTIONS_CHAT_ALERT_NOTIFICATION || 'alert',
+          'UserId and role are required',
+        ),
+      );
 
   const payload = {
     userId,

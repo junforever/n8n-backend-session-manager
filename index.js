@@ -19,6 +19,9 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 
+// Middleware para logging
+app.use(requestLogger);
+
 // Middleware para controlar el tiempo maximo de espera por cada petición
 app.use(timeout(process.env.REQUEST_TIMEOUT || '15s'));
 
@@ -38,9 +41,6 @@ app.use(
 
 // Middleware para controlar el limite de peticiones por usuario
 app.use(limiter);
-
-// Middleware para logging
-app.use(requestLogger);
 
 // Middleware para manejar errores JSON
 app.use(jsonErrorHandler);

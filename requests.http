@@ -10,5 +10,5 @@ Content-Type: application/json
 {
   "data": "<script>alert('XSS')</script>",
   "comment": "   Hola Mundo!   ",
-  "test": "Hello\x00\nWorld\x1F!"
+  "test": "Hello\\x00\nWorld\\x1F!"
 }

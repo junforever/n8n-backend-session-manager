@@ -4,9 +4,9 @@ import { createResponse } from '../utils/requestResponse.js';
 //se puede aplicar solo a un tipo de peticion
 export const limiter = rateLimit({
   //intervalo de tiempo en ms (1 min)
-  windowMs: 60 * 1000,
+  windowMs: (process.env.RATE_LIMIT_WINDOW_MS || 60) * 1000,
   //peticiones máximas segun el intervalo de tiempo
-  max: 30,
+  max: process.env.RATE_LIMIT_MAX || 30,
   //identificador unico de la peticion
   keyGenerator: (req) => req.body?.userId || req.ip,
   //incluir encabezados estándar relacionados con la limitación de solicitudes
@@ -24,9 +24,9 @@ export const limiter = rateLimit({
         createResponse(
           false,
           process.env.ACTIONS_CHAT_ALERT_NOTIFICATION || 'alert',
-          `Too many requests. Please try again later. RetryAfter: ${Math.ceil(
-            options.windowMs / 1000,
-          )}`,
+          `Too many requests. Please try again later. RetryAfter: ${res.get(
+            'Retry-After',
+          )} sec.`,
         ),
       );
   },
