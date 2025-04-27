@@ -28,7 +28,12 @@ function sanitizeBody(body) {
 
 export const sanitizeRequest = (req, res, next) => {
   try {
-    req.body = sanitizeBody(req.body);
+    // Ejecutar solo si el método HTTP es POST, PUT o PATCH
+    if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+      if (req.body && Object.keys(req.body).length > 0) {
+        req.body = sanitizeBody(req.body);
+      }
+    }
     next();
   } catch (error) {
     if (error instanceof Error) {
