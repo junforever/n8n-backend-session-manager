@@ -5,7 +5,10 @@ function sanitizeBody(body) {
 
   for (const key in body) {
     if (typeof body[key] === 'string') {
-      sanitized[key] = validator.escape(body[key].trim());
+      sanitized[key] = validator.stripLow(
+        validator.escape(validator.trim(body[key])),
+        true,
+      );
     } else {
       sanitized[key] = body[key];
     }

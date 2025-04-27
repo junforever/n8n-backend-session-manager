@@ -1,6 +1,7 @@
 import rateLimit from 'express-rate-limit';
 import { createResponse } from '../utils/requestResponse.js';
 
+//se puede aplicar solo a un tipo de peticion
 export const limiter = rateLimit({
   //intervalo de tiempo en ms (1 min)
   windowMs: 60 * 1000,
