@@ -5,16 +5,6 @@ import { createResponse } from '../utils/requestResponse.js';
 const cache = new NodeCache();
 const JWT_SECRET = process.env.JWT_SECRET || 'my_super_secret_phrase';
 
-export const root = (req, res) => {
-  res.json(
-    createResponse(
-      true,
-      process.env.ACTIONS_DO_NOTHING || '',
-      'Welcome to n8n backend api management',
-    ),
-  );
-};
-
 //TODO: usar la funcion createResponse para la respuesta
 export const generateToken = (req, res) => {
   const { userId, role } = req.body;

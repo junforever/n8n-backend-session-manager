@@ -3,14 +3,15 @@ import timeout from 'connect-timeout';
 import dotenv from 'dotenv';
 
 import { authRouter } from './routes/authRouter.js';
+import { sanitizeRouter } from './routes/sanitizeRouter.js';
 
 //import { detectLanguage } from './language';
 import { requestLogger } from './middleware/logger.js';
 import { limiter } from './middleware/rateLimit.js';
 import { requestTimeOut, haltOnTimedout } from './middleware/timeOut.js';
 import { sanitizeRequest } from './middleware/sanitizeRequest.js';
-import { invalidRoute } from './middleware/invalidRoute.js';
 import { jsonErrorHandler } from './middleware/jsonErrorHandler.js';
+import { invalidRoute } from './middleware/invalidRoute.js';
 
 dotenv.config();
 
@@ -42,10 +43,14 @@ app.use(jsonErrorHandler);
 // Middleware para sanitizar todo lo que llega por body
 app.use(sanitizeRequest);
 
+// Deshabilitar el encabezado x-powered-by
 app.disable('x-powered-by');
 
-// Middleware para manejo de rutas
+// Middleware para manejo de rutas de autenticacion
 app.use('/', authRouter);
+
+// Middleware para manejo de rutas de sanitizacion
+app.use('/', sanitizeRouter);
 
 // Middleware para rutas invalidas
 app.use(invalidRoute);
