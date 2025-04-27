@@ -29,7 +29,12 @@ app.use(haltOnTimedout);
 app.use(requestTimeOut);
 
 // Middleware para controlar el tamaño maximo del body
-app.use(express.json({ limit: process.env.REQUEST_MAX_BODY_SIZE || '10kb' }));
+app.use(
+  express.json({
+    limit: process.env.REQUEST_MAX_BODY_SIZE || '10kb',
+    strict: true,
+  }),
+);
 
 // Middleware para controlar el limite de peticiones por usuario
 app.use(limiter);

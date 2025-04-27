@@ -2,3 +2,13 @@
 
 ###
 GET {{api_url}}
+
+###
+POST {{api_url}}/sanitize
+Content-Type: application/json
+
+{
+  "data": "<script>alert('XSS')</script>",
+  "comment": "   Hola Mundo!   ",
+  "test": "Hello\x00\nWorld\x1F!"
+}
