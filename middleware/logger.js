@@ -44,13 +44,13 @@ export function requestLogger(req, res, next) {
   res.on('finish', () => {
     const duration = Date.now() - start;
     const log = {
-      time: timestamp,
+      duration: `${duration}ms`,
       method: req.method,
+      requestBody: req?.body || 'N/A',
+      responseData: responseBody?.data || 'N/A', // Capturar el campo data de la respuesta
       route: req.originalUrl,
       status: res.statusCode,
-      duration: `${duration}ms`,
-      userId: req.body?.userId || 'N/A',
-      responseData: responseBody?.data || 'N/A', // Capturar el campo data de la respuesta
+      time: timestamp,
     };
 
     // Guardar el log solo si hay un error (status >= 400)
@@ -66,13 +66,13 @@ export function requestLogger(req, res, next) {
     if (!res.writableEnded) {
       const duration = Date.now() - start;
       const log = {
-        time: timestamp,
+        duration: `${duration}ms`,
         method: req.method,
+        requestBody: req?.body || 'N/A',
+        responseData: 'Connection closed before response was sent',
         route: req.originalUrl,
         status: 'N/A', // No hay código de estado porque la respuesta no se envió
-        duration: `${duration}ms`,
-        userId: req.body?.userId || 'N/A',
-        responseData: 'Connection closed before response was sent',
+        time: timestamp,
       };
       //console.log(JSON.stringify(log));
       logger.error(log); // Registrar error en el archivo
