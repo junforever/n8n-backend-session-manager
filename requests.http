@@ -1,4 +1,4 @@
-@api_url = http://localhost:{{$dotenv PORT}}/es
+@api_url = http://localhost:{{$dotenv PORT}}
 
 ###
 GET {{api_url}}
@@ -6,6 +6,7 @@ Authorization: Bearer {{$dotenv SESSION_SECRET}}
 
 ###
 POST {{api_url}}/sanitize
+Authorization: Bearer {{$dotenv SESSION_SECRET}}
 Content-Type: application/json
 
 {
