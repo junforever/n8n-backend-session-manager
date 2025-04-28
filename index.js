@@ -23,9 +23,6 @@ const PORT = process.env.PORT || 3000;
 // Middleware para logging
 app.use(requestLogger);
 
-// Middleware para validar que se envie el idioma
-app.use(languageValidation);
-
 // Middleware para controlar el tiempo maximo de espera por cada petición
 app.use(timeout(process.env.REQUEST_TIMEOUT || '15s'));
 
@@ -54,6 +51,9 @@ app.use(sanitizeRequest);
 
 // Deshabilitar el encabezado x-powered-by
 app.disable('x-powered-by');
+
+// Middleware para validar que se envie el idioma
+app.use('/:lang', languageValidation);
 
 // Middleware para manejo de rutas de autenticacion
 app.use('/:lang', authRouter);

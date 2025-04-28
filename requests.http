@@ -1,4 +1,4 @@
-@api_url = http://localhost:{{$dotenv PORT}}
+@api_url = http://localhost:{{$dotenv PORT}}/es
 
 ###
 GET {{api_url}}
