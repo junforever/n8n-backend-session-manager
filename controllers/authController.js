@@ -11,7 +11,7 @@ const cache = new NodeCache();
 const JWT_SECRET = process.env.JWT_SECRET || 'my_super_secret_phrase';
 
 export const generateToken = (req, res) => {
-  const { lang } = req.params;
+  const lang = req?.body?.lang || 'en';
   const { userId, role } = req.body;
   if (!userId || !role)
     return res
@@ -36,7 +36,7 @@ export const generateToken = (req, res) => {
 };
 
 export const verifyToken = (req, res) => {
-  const { lang } = req.params;
+  const lang = req?.body?.lang || 'en';
   const { token } = req.body;
   if (!token)
     return res

@@ -13,6 +13,7 @@ import { sanitizeRequest } from './middleware/sanitizeRequest.js';
 import { jsonErrorHandler } from './middleware/jsonErrorHandler.js';
 import { invalidRoute } from './middleware/invalidRoute.js';
 import { languageValidation } from './middleware/languageValidation.js';
+import { validateConnectionToken } from './middleware/validateConnectionToken.js';
 
 dotenv.config();
 
@@ -22,6 +23,9 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware para logging
 app.use(requestLogger);
+
+// Middleware para validar el token de conexión
+app.use(validateConnectionToken);
 
 // Middleware para controlar el tiempo maximo de espera por cada petición
 app.use(timeout(process.env.REQUEST_TIMEOUT || '15s'));

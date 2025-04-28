@@ -3,7 +3,7 @@ import { createResponse } from '../utils/requestResponse.js';
 import { ACTIONS_CHAT_ALERT_NOTIFICATION } from '../constants/constants.js';
 
 export const requestTimeOut = (req, res, next) => {
-  const { lang } = req.params;
+  const lang = req?.body?.lang || 'en';
   if (req.timedout) {
     return res
       .status(503)

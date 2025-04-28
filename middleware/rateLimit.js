@@ -19,7 +19,7 @@ export const limiter = rateLimit({
 
   // Respuesta personalizada cuando se excede el límite
   handler: (req, res, next, options) => {
-    const { lang } = req.params;
+    const lang = req?.body?.lang || 'en';
     //options.statusCode 429 (Too Many Requests)
     res
       .status(options.statusCode)

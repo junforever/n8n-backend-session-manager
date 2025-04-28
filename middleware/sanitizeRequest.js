@@ -27,7 +27,7 @@ function sanitizeBody(body) {
 }
 
 export const sanitizeRequest = (req, res, next) => {
-  const { lang } = req.params;
+  const lang = req?.body?.lang || 'en';
 
   try {
     // Ejecutar solo si el método HTTP es POST, PUT o PATCH

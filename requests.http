@@ -2,6 +2,7 @@
 
 ###
 GET {{api_url}}
+Authorization: Bearer {{$dotenv SESSION_SECRET}}
 
 ###
 POST {{api_url}}/sanitize
@@ -12,3 +13,4 @@ Content-Type: application/json
   "comment": "   Hola Mundo!   ",
   "test": "Hello\\x00\nWorld\\x1F!"
 }
+

@@ -2,18 +2,19 @@ import { createResponse } from '../utils/requestResponse.js';
 import { errors } from '../i18n/errors.js';
 import { ACTIONS_CHAT_ALERT_NOTIFICATION } from '../constants/constants.js';
 
-const languages = ['es', 'en'];
-
-export const languageValidation = (req, res, next) => {
+export const validateConnectionToken = (req, res, next) => {
   const lang = req?.body?.lang || 'en';
-  if (!lang || !languages.includes(lang)) {
+  const token = req.headers['authorization'];
+
+  // Verificar que el token esté presente y sea válido
+  if (!token || token.replace('Bearer ', '') !== process.env.SESSION_SECRET) {
     return res
-      .status(400)
+      .status(403)
       .json(
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
-          errors.languageError.en,
+          errors.invalidTokenError[lang],
         ),
       );
   }
