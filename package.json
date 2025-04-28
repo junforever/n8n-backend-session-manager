@@ -1,7 +1,7 @@
 {
   "name": "jwt-backend-session",
   "version": "1.0.0",
-  "description": "Backend para generar y validar JWT en memoria",
+  "description": "Backend to manage n8n authentication, authorization, rate limiting, timeout, logging, and security",
   "main": "index.js",
   "type": "module",
   "author": "junforever",
