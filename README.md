@@ -2,30 +2,36 @@
 
 This project provides a backend service built with Node.js and Express.js, designed to manage authentication, authorization, rate limiting, timeouts, logging, and security features, potentially acting as a gateway or middleware for another service like n8n.
 
+---
+
 ## Features
 
-*   **JWT Authentication/Authorization:** Secures endpoints using JSON Web Tokens.
-*   **Rate Limiting:** Protects the application from excessive requests using `express-rate-limit`.
-*   **Request Timeouts:** Implements request timeouts using `connect-timeout` to prevent hanging requests.
-*   **Request Sanitization:** Includes middleware likely using `validator` to sanitize incoming request data.
-*   **Logging:** Comprehensive logging implemented using `winston` with daily log rotation.
-*   **Language Detection:** Capable of detecting request language using `cld3-asm`.
-*   **Internationalization (i18n):** Supports multiple languages for responses.
-*   **Caching:** Utilizes `node-cache` for in-memory caching.
-*   **Environment Configuration:** Uses `.env` files for managing environment variables.
+- **JWT Authentication/Authorization:** Secures endpoints using JSON Web Tokens.
+- **Rate Limiting:** Protects the application from excessive requests using `express-rate-limit`.
+- **Request Timeouts:** Implements request timeouts using `connect-timeout` to prevent hanging requests.
+- **Request Sanitization:** Includes middleware likely using `validator` to sanitize incoming request data.
+- **Logging:** Comprehensive logging implemented using `winston` with daily log rotation.
+- **Language Detection:** Capable of detecting request language using `cld3-asm`.
+- **Internationalization (i18n):** Supports multiple languages for responses.
+- **Caching:** Utilizes `node-cache` for in-memory caching.
+- **Environment Configuration:** Uses `.env` files for managing environment variables.
+
+---
 
 ## Key Technologies
 
-*   Node.js
-*   Express.js
-*   jsonwebtoken
-*   express-rate-limit
-*   connect-timeout
-*   validator
-*   winston
-*   cld3-asm
-*   dotenv
-*   node-cache
+- Node.js
+- Express.js
+- jsonwebtoken
+- express-rate-limit
+- connect-timeout
+- validator
+- winston
+- cld3-asm
+- dotenv
+- node-cache
+
+---
 
 ## Project Structure
 
@@ -46,12 +52,14 @@ This project provides a backend service built with Node.js and Express.js, desig
 └── README.md          # This file
 ```
 
+---
+
 ## Getting Started
 
 ### Prerequisites
 
-*   Node.js (Refer to `package.json` for potential version requirements)
-*   npm
+- Node.js (Refer to `package.json` for potential version requirements)
+- npm
 
 ### Installation
 
@@ -75,20 +83,29 @@ This project provides a backend service built with Node.js and Express.js, desig
 
 ### Running the Application
 
-*   **Development Mode (with auto-reload):**
-    ```bash
-    npm run dev
-    ```
-*   **Production Mode:**
-    ```bash
-    npm start
-    ```
+- **Development Mode (with auto-reload):**
+  ```bash
+  npm run dev
+  ```
+- **Production Mode:**
+  ```bash
+  npm start
+  ```
 
 The application will typically run on the port specified in your `.env` file or a default port.
+
+---
 
 ## License
 
 This project is licensed under the ISC License. See the `LICENCE` file for details.
+
+---
+
+## Contributing
+
+Contributions, issues and feature requests are welcome!
+Feel free to open an issue or submit a pull request.
 
 ---
 
