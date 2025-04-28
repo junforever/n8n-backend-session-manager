@@ -17,5 +17,6 @@ export const languageValidation = (req, res, next) => {
         ),
       );
   }
+  req.lang = lang;
   next();
 };

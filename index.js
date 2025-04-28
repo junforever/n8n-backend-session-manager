@@ -27,6 +27,9 @@ app.use(requestLogger);
 // Middleware para validar el token de conexión
 app.use(validateConnectionToken);
 
+// Middleware para validar que se envie un idioma spoportado
+app.use(languageValidation);
+
 // Middleware para controlar el tiempo maximo de espera por cada petición
 app.use(timeout(process.env.REQUEST_TIMEOUT || '15s'));
 
@@ -56,14 +59,11 @@ app.use(sanitizeRequest);
 // Deshabilitar el encabezado x-powered-by
 app.disable('x-powered-by');
 
-// Middleware para validar que se envie el idioma
-app.use('/:lang', languageValidation);
-
 // Middleware para manejo de rutas de autenticacion
-app.use('/:lang', authRouter);
+app.use('/', authRouter);
 
 // Middleware para manejo de rutas de sanitizacion
-app.use('/:lang', sanitizeRouter);
+app.use('/', sanitizeRouter);
 
 // Middleware para rutas invalidas
 app.use(invalidRoute);
