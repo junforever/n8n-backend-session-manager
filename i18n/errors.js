@@ -31,4 +31,16 @@ export const errors = {
     es: 'Tiempo de espera excedido. Por favor, intente de nuevo más tarde.',
     en: 'Timeout exceeded. Please try again later.',
   },
+  userIdRoleError: {
+    es: 'Id de usuario y role son obligatorios',
+    en: 'User id and role are required',
+  },
+  userTokenError: {
+    es: 'Datos de inicio de sesión invalidos',
+    en: 'Invalid login credentials',
+  },
+  expiredTokenError: {
+    es: 'La sesión a caducado, por favor vuelva a iniciar sesión',
+    en: 'Session expired, please log in again',
+  },
 };

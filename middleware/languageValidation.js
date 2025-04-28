@@ -1,4 +1,6 @@
 import { createResponse } from '../utils/requestResponse.js';
+import { errors } from '../i18n/errors.js';
+import { ACTIONS_CHAT_ALERT_NOTIFICATION } from '../constants/constants.js';
 
 const languages = ['es', 'en'];
 
@@ -10,7 +12,7 @@ export const languageValidation = (req, res, next) => {
       .json(
         createResponse(
           false,
-          process.env.ACTIONS_CHAT_ALERT_NOTIFICATION || 'alert',
+          ACTIONS_CHAT_ALERT_NOTIFICATION,
           errors.languageError.en,
         ),
       );

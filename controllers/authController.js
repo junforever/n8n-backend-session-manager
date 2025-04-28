@@ -1,12 +1,17 @@
 import jwt from 'jsonwebtoken';
 import NodeCache from 'node-cache';
 import { createResponse } from '../utils/requestResponse.js';
+import {
+  ACTIONS_CHAT_ALERT_NOTIFICATION,
+  ACTIONS_CONTINUE,
+} from '../constants/constants.js';
+import { errors } from '../i18n/errors.js';
 
 const cache = new NodeCache();
 const JWT_SECRET = process.env.JWT_SECRET || 'my_super_secret_phrase';
 
-//TODO: usar la funcion createResponse para la respuesta
 export const generateToken = (req, res) => {
+  const { lang } = req.params;
   const { userId, role } = req.body;
   if (!userId || !role)
     return res
@@ -14,11 +19,10 @@ export const generateToken = (req, res) => {
       .json(
         createResponse(
           false,
-          process.env.ACTIONS_CHAT_ALERT_NOTIFICATION || 'alert',
-          'UserId and role are required',
+          ACTIONS_CHAT_ALERT_NOTIFICATION,
+          errors.userIdRoleError[lang],
         ),
       );
-
   const payload = {
     userId,
     role,
@@ -28,14 +32,22 @@ export const generateToken = (req, res) => {
   const token = jwt.sign(payload, JWT_SECRET);
   cache.set(`token_${userId}`, token, 15 * 60);
 
-  res.json({ token });
+  res.json(createResponse(true, ACTIONS_CONTINUE, token));
 };
 
-//TODO: usar la funcion createResponse para la respuesta
 export const verifyToken = (req, res) => {
+  const { lang } = req.params;
   const { token } = req.body;
   if (!token)
-    return res.status(400).json({ valid: false, error: 'Token requerido' });
+    return res
+      .status(400)
+      .json(
+        createResponse(
+          false,
+          ACTIONS_CHAT_ALERT_NOTIFICATION,
+          errors.userTokenError[lang],
+        ),
+      );
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
@@ -44,11 +56,24 @@ export const verifyToken = (req, res) => {
     if (!cached || cached !== token) {
       return res
         .status(401)
-        .json({ valid: false, error: 'Token no coincide o expirado' });
+        .json(
+          createResponse(
+            false,
+            ACTIONS_CHAT_ALERT_NOTIFICATION,
+            errors.expiredTokenError[lang],
+          ),
+        );
     }
-
     res.json({ valid: true, user: decoded });
   } catch (err) {
-    res.status(401).json({ valid: false, error: 'Token inválido o expirado' });
+    res
+      .status(401)
+      .json(
+        createResponse(
+          false,
+          ACTIONS_CHAT_ALERT_NOTIFICATION,
+          errors.expiredTokenError[lang],
+        ),
+      );
   }
 };

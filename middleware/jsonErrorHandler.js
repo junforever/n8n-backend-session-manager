@@ -1,5 +1,6 @@
 import { createResponse } from '../utils/requestResponse.js';
 import { errors } from '../i18n/errors.js';
+import { ACTIONS_CHAT_ALERT_NOTIFICATION } from '../constants/constants.js';
 
 export const jsonErrorHandler = (err, req, res, next) => {
   const { lang } = req.params;
@@ -9,7 +10,7 @@ export const jsonErrorHandler = (err, req, res, next) => {
       .json(
         createResponse(
           false,
-          process.env.ACTIONS_CHAT_ALERT_NOTIFICATION || 'alert',
+          ACTIONS_CHAT_ALERT_NOTIFICATION,
           errors.jsonError[lang],
         ),
       );
@@ -19,7 +20,7 @@ export const jsonErrorHandler = (err, req, res, next) => {
     .json(
       createResponse(
         false,
-        process.env.ACTIONS_CHAT_ALERT_NOTIFICATION || 'alert',
+        ACTIONS_CHAT_ALERT_NOTIFICATION,
         errors.internalServerError[lang],
       ),
     );

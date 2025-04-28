@@ -1,5 +1,6 @@
 import { createResponse } from '../utils/requestResponse.js';
 import { errors } from '../i18n/errors.js';
+import { ACTIONS_CHAT_ALERT_NOTIFICATION } from '../constants/constants.js';
 
 export const invalidRoute = (req, res) => {
   const { lang } = req.params;
@@ -8,7 +9,7 @@ export const invalidRoute = (req, res) => {
     .json(
       createResponse(
         false,
-        process.env.ACTIONS_CHAT_ALERT_NOTIFICATION || 'alert',
+        ACTIONS_CHAT_ALERT_NOTIFICATION,
         errors.invalidRouteError[lang],
       ),
     );
