@@ -12,6 +12,7 @@ import { requestTimeOut, haltOnTimedout } from './middleware/timeOut.js';
 import { sanitizeRequest } from './middleware/sanitizeRequest.js';
 import { jsonErrorHandler } from './middleware/jsonErrorHandler.js';
 import { invalidRoute } from './middleware/invalidRoute.js';
+import { languageValidation } from './middleware/languageValidation.js';
 
 dotenv.config();
 
@@ -21,6 +22,9 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware para logging
 app.use(requestLogger);
+
+// Middleware para validar que se envie el idioma
+app.use(languageValidation);
 
 // Middleware para controlar el tiempo maximo de espera por cada petición
 app.use(timeout(process.env.REQUEST_TIMEOUT || '15s'));
@@ -52,10 +56,10 @@ app.use(sanitizeRequest);
 app.disable('x-powered-by');
 
 // Middleware para manejo de rutas de autenticacion
-app.use('/', authRouter);
+app.use('/:lang', authRouter);
 
 // Middleware para manejo de rutas de sanitizacion
-app.use('/', sanitizeRouter);
+app.use('/:lang', sanitizeRouter);
 
 // Middleware para rutas invalidas
 app.use(invalidRoute);

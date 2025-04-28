@@ -1,5 +1,6 @@
 import rateLimit from 'express-rate-limit';
 import { createResponse } from '../utils/requestResponse.js';
+import { errors } from '../i18n/errors.js';
 
 //se puede aplicar solo a un tipo de peticion
 export const limiter = rateLimit({
@@ -17,6 +18,7 @@ export const limiter = rateLimit({
 
   // Respuesta personalizada cuando se excede el límite
   handler: (req, res, next, options) => {
+    const { lang } = req.params;
     //options.statusCode 429 (Too Many Requests)
     res
       .status(options.statusCode)
@@ -24,9 +26,10 @@ export const limiter = rateLimit({
         createResponse(
           false,
           process.env.ACTIONS_CHAT_ALERT_NOTIFICATION || 'alert',
-          `Too many requests. Please try again later. RetryAfter: ${res.get(
-            'Retry-After',
-          )} sec.`,
+          errors.rateLimitError[lang].replace(
+            /<countdown>/g,
+            res.get('Retry-After'),
+          ),
         ),
       );
   },

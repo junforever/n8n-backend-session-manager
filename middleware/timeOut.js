@@ -1,4 +1,8 @@
+import { errors } from '../i18n/errors.js';
+import { createResponse } from '../utils/requestResponse.js';
+
 export const requestTimeOut = (req, res, next) => {
+  const { lang } = req.params;
   if (req.timedout) {
     return res
       .status(503)
@@ -6,7 +10,7 @@ export const requestTimeOut = (req, res, next) => {
         createResponse(
           false,
           process.env.ACTIONS_CHAT_ALERT_NOTIFICATION || 'alert',
-          `Timeout reached - Method: ${req.method} Url: ${req.originalUrl}`,
+          errors.timeoutError[lang],
         ),
       );
   }

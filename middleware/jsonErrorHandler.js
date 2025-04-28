@@ -1,6 +1,8 @@
 import { createResponse } from '../utils/requestResponse.js';
+import { errors } from '../i18n/errors.js';
 
 export const jsonErrorHandler = (err, req, res, next) => {
+  const { lang } = req.params;
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
     return res
       .status(400)
@@ -8,7 +10,7 @@ export const jsonErrorHandler = (err, req, res, next) => {
         createResponse(
           false,
           process.env.ACTIONS_CHAT_ALERT_NOTIFICATION || 'alert',
-          `Invalid JSON format in request: ${req.originalUrl}`,
+          errors.jsonError[lang],
         ),
       );
   }
@@ -18,7 +20,7 @@ export const jsonErrorHandler = (err, req, res, next) => {
       createResponse(
         false,
         process.env.ACTIONS_CHAT_ALERT_NOTIFICATION || 'alert',
-        `Internal server error : ${req.originalUrl}`,
+        errors.internalServerError[lang],
       ),
     );
 };

@@ -1,6 +1,7 @@
 import { dateTimeEcuador } from '../utils/dateTimeEcuador.js';
 import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
+import { errors } from '../i18n/errors.js';
 
 const timestamp = dateTimeEcuador();
 
@@ -69,7 +70,7 @@ export function requestLogger(req, res, next) {
         duration: `${duration}ms`,
         method: req.method,
         requestBody: req?.body || 'N/A',
-        responseData: 'Connection closed before response was sent',
+        responseData: errors.connectionError.en,
         route: req.originalUrl,
         status: 'N/A', // No hay código de estado porque la respuesta no se envió
         time: timestamp,

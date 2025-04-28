@@ -1,4 +1,6 @@
 import validator from 'validator';
+import { errors } from '../i18n/errors.js';
+import { createResponse } from '../utils/requestResponse.js';
 
 function sanitizeBody(body) {
   try {
@@ -18,15 +20,15 @@ function sanitizeBody(body) {
     return sanitized;
   } catch (error) {
     if (error instanceof Error) {
-      throw new Error(
-        `There was an error sanitizing the request: ${error.message}`,
-      );
+      throw new Error(error.message);
     }
-    throw new Error('There was an error sanitizing the request');
+    throw new Error('');
   }
 }
 
 export const sanitizeRequest = (req, res, next) => {
+  const { lang } = req.params;
+
   try {
     // Ejecutar solo si el método HTTP es POST, PUT o PATCH
     if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
@@ -36,12 +38,14 @@ export const sanitizeRequest = (req, res, next) => {
     }
     next();
   } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({
-        success: false,
-        action: process.env.ACTIONS_CHAT_ALERT_NOTIFICATION || 'alert',
-        data: `There was an error sanitizing the request: ${error.message}`,
-      });
-    }
+    res
+      .status(500)
+      .json(
+        createResponse(
+          false,
+          process.env.ACTIONS_CHAT_ALERT_NOTIFICATION || 'alert',
+          errors.sanitizeError[lang],
+        ),
+      );
   }
 };
