@@ -1,7 +1,7 @@
 {
-  "name": "jwt-backend-session",
+  "name": "n8n-backend-session-manager",
   "version": "1.0.0",
-  "description": "Backend to manage n8n authentication, authorization, rate limiting, timeout, logging, and security",
+  "description": "Backend designed to manage authentication, authorization, rate limiting, timeout, logging, and security. Potentially acting as a gateway or middleware for another service like n8n",
   "main": "index.js",
   "type": "module",
   "author": "junforever",

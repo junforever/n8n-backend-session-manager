@@ -1,4 +1,3 @@
-// jwt-backend-session/captcha.js
 import svgCaptcha from 'svg-captcha';
 import NodeCache from 'node-cache';
 
