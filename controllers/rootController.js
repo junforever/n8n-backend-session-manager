@@ -1,5 +1,8 @@
 import { createResponse } from '../utils/requestResponse.js';
-import { ACTIONS_DO_NOTHING } from '../constants/constants.js';
+import {
+  ACTIONS_DO_NOTHING,
+  ROOT_CONTROLLER_CODE,
+} from '../constants/constants.js';
 
 export const root = (req, res) => {
   res.json(
@@ -7,6 +10,8 @@ export const root = (req, res) => {
       true,
       ACTIONS_DO_NOTHING,
       'Welcome to n8n backend api management',
+      null,
+      ROOT_CONTROLLER_CODE,
     ),
   );
 };

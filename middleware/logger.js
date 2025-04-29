@@ -48,7 +48,8 @@ export function requestLogger(req, res, next) {
       duration: `${duration}ms`,
       method: req.method,
       requestBody: req?.body || 'N/A',
-      responseData: responseBody?.data || 'N/A', // Capturar el campo data de la respuesta
+      responseData: responseBody?.log || 'N/A', // Capturar el campo log de la respuesta
+      responseCode: responseBody?.code || 'N/A',
       route: req.originalUrl,
       status: res.statusCode,
       time: timestamp,
@@ -70,7 +71,8 @@ export function requestLogger(req, res, next) {
         duration: `${duration}ms`,
         method: req.method,
         requestBody: req?.body || 'N/A',
-        responseData: errors.connectionError.en,
+        responseData: errors.connectionError.log_es,
+        responseCode: 'N/A',
         route: req.originalUrl,
         status: 'N/A', // No hay código de estado porque la respuesta no se envió
         time: timestamp,

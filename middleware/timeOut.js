@@ -1,6 +1,9 @@
 import { errors } from '../i18n/errors.js';
 import { createResponse } from '../utils/requestResponse.js';
-import { ACTIONS_CHAT_ALERT_NOTIFICATION } from '../constants/constants.js';
+import {
+  ACTIONS_CHAT_ALERT_NOTIFICATION,
+  TIME_OUT_CODE,
+} from '../constants/constants.js';
 
 export const requestTimeOut = (req, res, next) => {
   const { lang } = req;
@@ -12,6 +15,8 @@ export const requestTimeOut = (req, res, next) => {
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
           errors.timeoutError[lang],
+          errors.timeoutError.log_es,
+          TIME_OUT_CODE,
         ),
       );
   }

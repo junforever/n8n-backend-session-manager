@@ -97,6 +97,7 @@ The absence of these headers will result in an error.
     - **JWT Secret:** Secret key used for signing JWT tokens.
     - **PORT:** Port on which the application will run.
     - **SESSION_SECRET:** A security token required for authenticating requests. Define this token in the `.env` file. Each incoming request must include this token in the `Authorization` header as a Bearer token (e.g., `Authorization: Bearer <your_token>`) to be processed. This ensures that only authorized clients or processes can interact with the backend.
+    - **JWT_EXPIRATION_MINUTES:** JWT expiration time in minutes (e.g., `15` for 15 minutes).
     - **REQUEST_TIMEOUT:** Maximum time allowed for a request to complete before timing out (e.g., `15s`).
     - **REQUEST_MAX_BODY_SIZE:** Maximum allowed size for the request body (e.g., `10kb`).
     - **RATE_LIMIT_WINDOW_MS:** Time window in seconds for rate limiting (e.g., `60` for 1 minute).

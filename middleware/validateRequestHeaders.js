@@ -1,8 +1,11 @@
 import { createResponse } from '../utils/requestResponse.js';
 import { errors } from '../i18n/errors.js';
-import { ACTIONS_CHAT_ALERT_NOTIFICATION } from '../constants/constants.js';
+import {
+  ACTIONS_CHAT_ALERT_NOTIFICATION,
+  VALIDATE_REQUEST_HEADERS_CODE,
+} from '../constants/constants.js';
 
-export const validateRequiredHeaders = (req, res, next) => {
+export const validateRequestHeaders = (req, res, next) => {
   const uniqueId = req.headers['x-unique-id'];
   const lang = req.headers['x-lang'];
 
@@ -13,7 +16,9 @@ export const validateRequiredHeaders = (req, res, next) => {
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
-          errors.invalidHeadersError.en,
+          errors.invalidHeadersError.es,
+          errors.invalidHeadersError.log_es,
+          VALIDATE_REQUEST_HEADERS_CODE,
         ),
       );
   }

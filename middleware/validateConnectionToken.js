@@ -1,6 +1,9 @@
 import { createResponse } from '../utils/requestResponse.js';
 import { errors } from '../i18n/errors.js';
-import { ACTIONS_CHAT_ALERT_NOTIFICATION } from '../constants/constants.js';
+import {
+  ACTIONS_CHAT_ALERT_NOTIFICATION,
+  VALIDATE_CONNECTION_TOKEN_CODE,
+} from '../constants/constants.js';
 
 export const validateConnectionToken = (req, res, next) => {
   const token = req.headers['authorization'];
@@ -12,7 +15,9 @@ export const validateConnectionToken = (req, res, next) => {
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
-          errors.invalidTokenError.en,
+          errors.invalidTokenError[lang],
+          errors.invalidTokenError.log_es,
+          VALIDATE_CONNECTION_TOKEN_CODE,
         ),
       );
   }

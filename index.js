@@ -14,7 +14,7 @@ import { jsonErrorHandler } from './middleware/jsonErrorHandler.js';
 import { invalidRoute } from './middleware/invalidRoute.js';
 import { languageValidation } from './middleware/languageValidation.js';
 import { validateConnectionToken } from './middleware/validateConnectionToken.js';
-import { validateRequiredHeaders } from './middleware/validateRequiredHeaders.js';
+import { validateRequestHeaders } from './middleware/validateRequestHeaders.js';
 
 dotenv.config();
 
@@ -32,7 +32,7 @@ app.use(requestLogger);
 app.use(validateConnectionToken);
 
 // Middleware para validar los encabezados requeridos
-app.use(validateRequiredHeaders);
+app.use(validateRequestHeaders);
 
 // Middleware para controlar el limite de peticiones por usuario
 app.use(limiter);

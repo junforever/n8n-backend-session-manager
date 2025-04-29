@@ -1,7 +1,10 @@
 import rateLimit from 'express-rate-limit';
 import { createResponse } from '../utils/requestResponse.js';
 import { errors } from '../i18n/errors.js';
-import { ACTIONS_CHAT_ALERT_NOTIFICATION } from '../constants/constants.js';
+import {
+  ACTIONS_CHAT_ALERT_NOTIFICATION,
+  RATE_LIMIT_CODE,
+} from '../constants/constants.js';
 
 //se puede aplicar solo a un tipo de peticion
 export const limiter = rateLimit({
@@ -31,6 +34,11 @@ export const limiter = rateLimit({
             /<countdown>/g,
             res.get('Retry-After'),
           ),
+          errors.rateLimitError.log_es.replace(
+            /<countdown>/g,
+            res.get('Retry-After'),
+          ),
+          RATE_LIMIT_CODE,
         ),
       );
   },

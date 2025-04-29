@@ -1,7 +1,10 @@
 import validator from 'validator';
 import { errors } from '../i18n/errors.js';
 import { createResponse } from '../utils/requestResponse.js';
-import { ACTIONS_CHAT_ALERT_NOTIFICATION } from '../constants/constants.js';
+import {
+  ACTIONS_CHAT_ALERT_NOTIFICATION,
+  SANITIZE_REQUEST_CODE,
+} from '../constants/constants.js';
 
 function sanitizeBody(body) {
   try {
@@ -45,6 +48,8 @@ export const sanitizeRequest = (req, res, next) => {
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
           errors.sanitizeError[lang],
+          errors.sanitizeError.log_es,
+          SANITIZE_REQUEST_CODE,
         ),
       );
   }

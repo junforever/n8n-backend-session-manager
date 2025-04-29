@@ -1,7 +1,10 @@
 import { z } from 'zod';
 import { createResponse } from '../utils/requestResponse.js';
 import { errors } from '../i18n/errors.js';
-import { ACTIONS_CHAT_ALERT_NOTIFICATION } from '../constants/constants.js';
+import {
+  ACTIONS_CHAT_ALERT_NOTIFICATION,
+  VALIDATE_REQUEST_BODY_CODE,
+} from '../constants/constants.js';
 
 // El body de la request debe tener al menos el campo uniqueId
 const requestSchema = z.object({
@@ -29,6 +32,8 @@ export const validateRequestBody = (req, res, next) => {
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
           `${errors.bodyValidationError[lang]} : ${zodErrors.join(' ')}`,
+          errors.bodyValidationError.log_es,
+          VALIDATE_REQUEST_BODY_CODE,
         ),
       );
   }

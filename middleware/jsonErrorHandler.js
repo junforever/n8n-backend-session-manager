@@ -1,6 +1,9 @@
 import { createResponse } from '../utils/requestResponse.js';
 import { errors } from '../i18n/errors.js';
-import { ACTIONS_CHAT_ALERT_NOTIFICATION } from '../constants/constants.js';
+import {
+  ACTIONS_CHAT_ALERT_NOTIFICATION,
+  JSON_ERROR_HANDLER_CODE,
+} from '../constants/constants.js';
 
 export const jsonErrorHandler = (err, req, res, next) => {
   const { lang } = req;
@@ -12,6 +15,8 @@ export const jsonErrorHandler = (err, req, res, next) => {
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
           errors.jsonError[lang],
+          errors.jsonError.log_es,
+          JSON_ERROR_HANDLER_CODE,
         ),
       );
   }
@@ -24,6 +29,8 @@ export const jsonErrorHandler = (err, req, res, next) => {
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
           errors.bodySizeError[lang],
+          errors.bodySizeError.log_es,
+          JSON_ERROR_HANDLER_CODE,
         ),
       );
   }
@@ -35,6 +42,8 @@ export const jsonErrorHandler = (err, req, res, next) => {
         false,
         ACTIONS_CHAT_ALERT_NOTIFICATION,
         errors.internalServerError[lang],
+        errors.internalServerError.log_es,
+        JSON_ERROR_HANDLER_CODE,
       ),
     );
 };
