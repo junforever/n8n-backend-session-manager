@@ -47,4 +47,8 @@ export const errors = {
     es: 'Acceso denegado.',
     en: 'Access denied.',
   },
+  bodySizeError: {
+    es: 'El tamaño del mensaje excede el límite de tamaño permitido.',
+    en: 'The body size exceeds the allowed size limit.',
+  },
 };

@@ -15,6 +15,19 @@ export const jsonErrorHandler = (err, req, res, next) => {
         ),
       );
   }
+
+  if (err instanceof Error && err.type === 'entity.too.large') {
+    return res
+      .status(413)
+      .json(
+        createResponse(
+          false,
+          ACTIONS_CHAT_ALERT_NOTIFICATION,
+          errors.bodySizeError[lang],
+        ),
+      );
+  }
+
   return res
     .status(500)
     .json(

@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 
 import { authRouter } from './routes/authRouter.js';
 import { sanitizeRouter } from './routes/sanitizeRouter.js';
+import { rootRouter } from './routes/rootRouter.js';
 
 //import { detectLanguage } from './language';
 import { requestLogger } from './middleware/logger.js';
@@ -20,6 +21,9 @@ dotenv.config();
 const app = express();
 
 const PORT = process.env.PORT || 3000;
+
+// Deshabilitar el encabezado x-powered-by
+app.disable('x-powered-by');
 
 // Middleware para logging
 app.use(requestLogger);
@@ -42,7 +46,7 @@ app.use(requestTimeOut);
 // Middleware para controlar el tamaño maximo del body
 app.use(
   express.json({
-    limit: process.env.REQUEST_MAX_BODY_SIZE || '10kb',
+    limit: process.env.REQUEST_MAX_BODY_SIZE || '1mb',
     strict: true,
   }),
 );
@@ -56,14 +60,14 @@ app.use(jsonErrorHandler);
 // Middleware para sanitizar todo lo que llega por body
 app.use(sanitizeRequest);
 
-// Deshabilitar el encabezado x-powered-by
-app.disable('x-powered-by');
+// Middleware para manejo de rutas de root
+app.use('/', rootRouter);
 
 // Middleware para manejo de rutas de autenticacion
-app.use('/', authRouter);
+app.use('/auth', authRouter);
 
 // Middleware para manejo de rutas de sanitizacion
-app.use('/', sanitizeRouter);
+app.use('/sanitize', sanitizeRouter);
 
 // Middleware para rutas invalidas
 app.use(invalidRoute);
