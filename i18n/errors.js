@@ -51,4 +51,16 @@ export const errors = {
     es: 'El tamaño del mensaje excede el límite de tamaño permitido.',
     en: 'The body size exceeds the allowed size limit.',
   },
+  bodyValidationError: {
+    es: 'Error en la validación del cuerpo de la solicitud.',
+    en: 'Error in request body validation.',
+  },
+  uniqueIdRequiredError: {
+    es: 'El campo uniqueId es obligatorio.',
+    en: 'The uniqueId field is required.',
+  },
+  uniqueIdMinLengthError: {
+    es: 'El campo uniqueId debe tener al menos 5 caracteres.',
+    en: 'The uniqueId field must have at least 5 characters.',
+  },
 };

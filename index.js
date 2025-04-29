@@ -15,6 +15,7 @@ import { jsonErrorHandler } from './middleware/jsonErrorHandler.js';
 import { invalidRoute } from './middleware/invalidRoute.js';
 import { languageValidation } from './middleware/languageValidation.js';
 import { validateConnectionToken } from './middleware/validateConnectionToken.js';
+import { validateRequestBody } from './middleware/validateRequestBody.js';
 
 dotenv.config();
 
@@ -50,6 +51,8 @@ app.use(
     strict: true,
   }),
 );
+
+app.use(validateRequestBody);
 
 // Middleware para controlar el limite de peticiones por usuario
 app.use(limiter);
