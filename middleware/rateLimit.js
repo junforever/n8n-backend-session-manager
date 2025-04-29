@@ -10,7 +10,7 @@ export const limiter = rateLimit({
   //peticiones máximas segun el intervalo de tiempo
   max: process.env.RATE_LIMIT_MAX || 30,
   //identificador unico de la peticion
-  keyGenerator: (req) => req.headers['x-client-id'] || req.ip,
+  keyGenerator: (req) => req.uniqueId || req.ip,
   //incluir encabezados estándar relacionados con la limitación de solicitudes
   //X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset
   standardHeaders: true,

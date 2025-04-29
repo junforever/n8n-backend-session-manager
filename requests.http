@@ -1,18 +1,19 @@
 @api_url = http://localhost:{{$dotenv PORT}}
 
-###
+### invalid request
 GET {{api_url}}
 Authorization: Bearer {{$dotenv SESSION_SECRET}}
 
-###
+### valid request
 POST {{api_url}}/sanitize
 Authorization: Bearer {{$dotenv SESSION_SECRET}}
+x-unique-id: 1234567890
+x-lang: es
 Content-Type: application/json
 
 {
   "data": "<script>alert('XSS')</script>",
   "comment": "   Hola Mundo!   ",
-  "test": "Hello\\x00\nWorld\\x1F!",
-  "lang": "gh"
+  "test": "Hello\\x00\nWorld\\x1F!"
 }
 

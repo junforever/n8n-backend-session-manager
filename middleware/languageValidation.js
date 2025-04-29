@@ -5,7 +5,8 @@ import { ACTIONS_CHAT_ALERT_NOTIFICATION } from '../constants/constants.js';
 const languages = ['es', 'en'];
 
 export const languageValidation = (req, res, next) => {
-  const lang = req?.body?.lang.toLowerCase() || 'es';
+  const { lang } = req;
+
   if (!lang || !languages.includes(lang)) {
     return res
       .status(400)

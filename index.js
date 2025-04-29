@@ -6,7 +6,6 @@ import { authRouter } from './routes/authRouter.js';
 import { sanitizeRouter } from './routes/sanitizeRouter.js';
 import { rootRouter } from './routes/rootRouter.js';
 
-//import { detectLanguage } from './language';
 import { requestLogger } from './middleware/logger.js';
 import { limiter } from './middleware/rateLimit.js';
 import { requestTimeOut, haltOnTimedout } from './middleware/timeOut.js';
@@ -15,7 +14,7 @@ import { jsonErrorHandler } from './middleware/jsonErrorHandler.js';
 import { invalidRoute } from './middleware/invalidRoute.js';
 import { languageValidation } from './middleware/languageValidation.js';
 import { validateConnectionToken } from './middleware/validateConnectionToken.js';
-import { validateRequestBody } from './middleware/validateRequestBody.js';
+import { validateRequiredHeaders } from './middleware/validateRequiredHeaders.js';
 
 dotenv.config();
 
@@ -32,8 +31,11 @@ app.use(requestLogger);
 // Middleware para validar el token de conexión
 app.use(validateConnectionToken);
 
-// Middleware para validar que se envie un idioma spoportado
-app.use(languageValidation);
+// Middleware para validar los encabezados requeridos
+app.use(validateRequiredHeaders);
+
+// Middleware para controlar el limite de peticiones por usuario
+app.use(limiter);
 
 // Middleware para controlar el tiempo maximo de espera por cada petición
 app.use(timeout(process.env.REQUEST_TIMEOUT || '15s'));
@@ -52,10 +54,8 @@ app.use(
   }),
 );
 
-app.use(validateRequestBody);
-
-// Middleware para controlar el limite de peticiones por usuario
-app.use(limiter);
+// Middleware para validar que se envie un idioma soportado
+app.use(languageValidation);
 
 // Middleware para manejar errores JSON
 app.use(jsonErrorHandler);

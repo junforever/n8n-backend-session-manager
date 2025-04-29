@@ -63,4 +63,8 @@ export const errors = {
     es: 'El campo uniqueId debe tener al menos 5 caracteres.',
     en: 'The uniqueId field must have at least 5 characters.',
   },
+  invalidHeadersError: {
+    es: 'La cabeceras requeridas no están siendo enviadas.',
+    en: 'The headers required are not being sent.',
+  },
 };

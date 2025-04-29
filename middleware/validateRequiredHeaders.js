@@ -2,19 +2,23 @@ import { createResponse } from '../utils/requestResponse.js';
 import { errors } from '../i18n/errors.js';
 import { ACTIONS_CHAT_ALERT_NOTIFICATION } from '../constants/constants.js';
 
-export const validateConnectionToken = (req, res, next) => {
-  const token = req.headers['authorization'];
+export const validateRequiredHeaders = (req, res, next) => {
+  const uniqueId = req.headers['x-unique-id'];
+  const lang = req.headers['x-lang'];
 
-  if (!token || token.replace('Bearer ', '') !== process.env.SESSION_SECRET) {
+  if (!uniqueId || !lang) {
     return res
-      .status(403)
+      .status(400)
       .json(
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
-          errors.invalidTokenError.en,
+          errors.invalidHeadersError.en,
         ),
       );
   }
+
+  req.uniqueId = uniqueId;
+  req.lang = lang.toLowerCase();
   next();
 };

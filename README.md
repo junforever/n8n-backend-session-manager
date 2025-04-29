@@ -30,6 +30,18 @@ This project provides a backend service built with Node.js and Express.js, desig
 - cld3-asm
 - dotenv
 - node-cache
+- zod
+
+---
+
+## Required Headers
+
+All API requests **must** include the following headers:
+
+- **`x-unique-id`**: A unique identifier for the client or user making the request. This value is crucial for the correct functioning of **Rate Limiting**, as it allows tracking requests per client.
+- **`x-lang`**: The preferred language code for responses (e.g., `es` for Spanish, `en` for English). This ensures that error messages and other responses are returned in the appropriate language.
+
+The absence of these headers will result in an error.
 
 ---
 
@@ -49,7 +61,9 @@ This project provides a backend service built with Node.js and Express.js, desig
 ├── index.js           # Application entry point
 ├── package.json       # Project metadata and dependencies
 ├── Procfile           # Deployment configuration (e.g., Heroku)
-└── README.md          # This file
+├── requests.http      # HTTP requests for testing
+├── LICENSE            # License file
+└── README.md          # Project documentation
 ```
 
 ---
