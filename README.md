@@ -79,7 +79,14 @@ This project provides a backend service built with Node.js and Express.js, desig
     ```bash
     cp .env.example .env
     ```
-2.  Edit the `.env` file and fill in the necessary configuration values (e.g., JWT secret, n8n URL if applicable, port).
+2.  Edit the `.env` file and fill in the necessary configuration values:
+    - **JWT Secret:** Secret key used for signing JWT tokens.
+    - **PORT:** Port on which the application will run.
+    - **SESSION_SECRET:** A security token required for authenticating requests. Define this token in the `.env` file. Each incoming request must include this token in the `Authorization` header as a Bearer token (e.g., `Authorization: Bearer <your_token>`) to be processed. This ensures that only authorized clients or processes can interact with the backend.
+    - **REQUEST_TIMEOUT:** Maximum time allowed for a request to complete before timing out (e.g., `15s`).
+    - **REQUEST_MAX_BODY_SIZE:** Maximum allowed size for the request body (e.g., `10kb`).
+    - **RATE_LIMIT_WINDOW_MS:** Time window in seconds for rate limiting (e.g., `60` for 1 minute).
+    - **RATE_LIMIT_MAX:** Maximum number of requests allowed per IP address within the defined time window.
 
 ### Running the Application
 
