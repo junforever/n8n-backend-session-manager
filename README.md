@@ -61,7 +61,7 @@ The absence of these headers will result in an error.
 ├── index.js           # Application entry point
 ├── package.json       # Project metadata and dependencies
 ├── Procfile           # Deployment configuration (e.g., Heroku)
-├── requests.http      # HTTP requests for testing
+├── requests.http      # HTTP requests for testing (use rest client vsc extension)
 ├── LICENSE            # License file
 └── README.md          # Project documentation
 ```

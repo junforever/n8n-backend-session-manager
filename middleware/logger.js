@@ -41,7 +41,6 @@ export function requestLogger(req, res, next) {
     responseBody = body; // Almacenar el cuerpo de la respuesta
     return originalJson.call(this, body); // Llamar al método original
   };
-
   res.on('finish', () => {
     const duration = Date.now() - start;
     const log = {
@@ -50,6 +49,7 @@ export function requestLogger(req, res, next) {
       requestBody: req?.body || 'N/A',
       responseData: responseBody?.log || 'N/A', // Capturar el campo log de la respuesta
       responseCode: responseBody?.code || 'N/A',
+      uniqueId: req.headers['x-unique-id'] || 'N/A',
       route: req.originalUrl,
       status: res.statusCode,
       time: timestamp,
@@ -73,6 +73,7 @@ export function requestLogger(req, res, next) {
         requestBody: req?.body || 'N/A',
         responseData: errors.connectionError.log_es,
         responseCode: 'N/A',
+        uniqueId: req.headers['x-unique-id'] || 'N/A',
         route: req.originalUrl,
         status: 'N/A', // No hay código de estado porque la respuesta no se envió
         time: timestamp,
