@@ -39,8 +39,8 @@ export const errors = {
     es: 'Se han enviado demasiadas peticiones. Por favor, intente de nuevo más tarde (dentro de: <countdown> seg.).',
     en: 'Too many requests. Please try again later (retry after: <countdown> sec.).',
     log_es:
-      'Demasiadas peticiones enviadas al servidor. RetryAfter: <countdown> seg.',
-    log_en: 'Too many requests. RetryAfter: <countdown> sec.',
+      'Demasiadas peticiones enviadas al servidor, dentro de: <countdown> seg.',
+    log_en: 'Too many requests, retry after: <countdown> sec.',
   },
   timeoutError: {
     es: 'La petición enviada excedio el tiempo de espera. Por favor, intente de nuevo más tarde.',
