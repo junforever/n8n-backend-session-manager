@@ -41,7 +41,7 @@ export function requestLogger(req, res, next) {
     responseBody = body; // Almacenar el cuerpo de la respuesta
     return originalJson.call(this, body); // Llamar al método original
   };
-
+  //TODO:incluir el userid
   res.on('finish', () => {
     const duration = Date.now() - start;
     const log = {

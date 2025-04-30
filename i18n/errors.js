@@ -57,8 +57,8 @@ export const errors = {
   userTokenError: {
     es: 'Datos de inicio de sesión invalidos, si el problema persiste, por favor contacte al administrador.',
     en: 'Invalid login credentials, if the problem persists, please contact the administrator.',
-    log_es: 'Datos de inicio de sesión invalidos.',
-    log_en: 'Invalid login credentials.',
+    log_es: 'El token de inicio de sesión no está siendo enviado.',
+    log_en: 'Sign in token not sent.',
   },
   expiredTokenError: {
     es: 'La sesión ha caducado, por favor vuelva a iniciar sesión.',
@@ -101,5 +101,23 @@ export const errors = {
     en: 'Server communication error, if the problem persists, please contact the administrator.',
     log_es: 'La cabeceras requeridas no están siendo enviadas.',
     log_en: 'The headers required are not being sent.',
+  },
+  logoutError: {
+    es: 'Error cerrando la sesión, si el problema persiste, por favor contacte al administrador.',
+    en: 'Session logout error, if the problem persists, please contact the administrator.',
+    log_es: 'Error cerrando la sesión.',
+    log_en: 'Session logout error.',
+  },
+  sessionAlreadyRevokedError: {
+    es: 'La sesión ya fue finalizada.',
+    en: 'Session already revoked.',
+    log_es: 'La sesión ya fue finalizada o el token ya expiró.',
+    log_en: 'Session already revoked or token expired.',
+  },
+  tokenRevokedError: {
+    es: 'Las credenciales de inicio de sesión no son válidas, por favor vuelva a iniciar sesión.',
+    en: 'Invalid login credentials, please log in again.',
+    log_es: 'Intento de inicio de sesión con credenciales revocadas.',
+    log_en: 'Login attempt with revoked credentials.',
   },
 };
