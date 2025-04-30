@@ -12,9 +12,9 @@ const cache = new NodeCache();
 const JWT_SECRET = process.env.JWT_SECRET || 'my_super_secret_phrase';
 
 export const generateToken = (req, res) => {
-  const { lang } = req;
-  const { userId, role } = req.body;
-  if (!userId || !role)
+  const { lang, uniqueId } = req;
+  const { role } = req.body;
+  if (!uniqueId || !role)
     return res
       .status(400)
       .json(
@@ -27,7 +27,7 @@ export const generateToken = (req, res) => {
         ),
       );
   const payload = {
-    userId,
+    uniqueId,
     role,
     exp:
       Math.floor(Date.now() / 1000) +
@@ -36,7 +36,7 @@ export const generateToken = (req, res) => {
 
   const token = jwt.sign(payload, JWT_SECRET);
   cache.set(
-    `token_${userId}`,
+    `token_${uniqueId}`,
     token,
     parseInt(process.env.JWT_EXPIRATION_MINUTES) * 60,
   );
@@ -79,7 +79,7 @@ export const verifyToken = (req, res) => {
 
   try {
     const userData = jwt.verify(token, JWT_SECRET);
-    const cached = cache.get(`token_${userData.userId}`);
+    const cached = cache.get(`token_${userData.uniqueId}`);
     console.log({ cached, userData });
 
     if (!cached || cached !== token) {
@@ -120,10 +120,10 @@ export const verifyToken = (req, res) => {
 };
 
 export const logout = (req, res) => {
-  const { lang } = req;
-  const { userId, token } = req.body;
+  const { lang, uniqueId } = req;
+  const { token } = req.body;
 
-  if (!userId || !token) {
+  if (!uniqueId || !token) {
     return res
       .status(400)
       .json(
@@ -148,7 +148,7 @@ export const logout = (req, res) => {
     cache.set(`revoked_${token}`, true, revokeTTL);
 
     // Eliminar el token del cache
-    cache.del(`token_${userId}`);
+    cache.del(`token_${uniqueId}`);
 
     return res.json(
       createResponse(true, ACTIONS_CONTINUE, null, null, AUTH_CONTROLLER_CODE),
@@ -166,21 +166,4 @@ export const logout = (req, res) => {
         ),
       );
   }
-};
-
-export const getRevokeTokens = (req, res) => {
-  // console.log(cached);
-  // console.log(cache.getStats());
-  const expiredTokens = cache.getStats().expired;
-  console.log(cache.keys());
-  console.log(cache.get(`token_junforever`));
-  res.json(
-    createResponse(
-      true,
-      ACTIONS_CONTINUE,
-      expiredTokens,
-      null,
-      AUTH_CONTROLLER_CODE,
-    ),
-  );
 };

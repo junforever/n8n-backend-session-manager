@@ -21,23 +21,22 @@ Content-Type: application/json
 ### jwt request
 POST {{api_url}}/auth/generate-token
 Authorization: Bearer {{$dotenv SESSION_SECRET}}
-x-unique-id: 1234567890
+x-unique-id: junforever
 x-lang: es
 Content-Type: application/json
 
 {
-  "userId": "junforever",
   "role": "admin"
 }
 
 ###
 
-@token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJqdW5mb3JldmVyIiwicm9sZSI6ImFkbWluIiwiZXhwIjoxNzQ2MDQ0Njk2LCJpYXQiOjE3NDYwNDM3OTZ9.kWSAje37DAK16p98adQZzK1f65PQBdpQTA2UN4AEy30"
+@token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVJZCI6Imp1bmZvcmV2ZXIiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NDYwNDU1NjcsImlhdCI6MTc0NjA0NDY2N30.0rbg2KT_McpPAecQ4bgGGAmj81dCJ-1XgSITxNDSftw"
 
 ### jwt validation
 POST {{api_url}}/auth/verify-token
 Authorization: Bearer {{$dotenv SESSION_SECRET}}
-x-unique-id: 1234567890
+x-unique-id: junforever
 x-lang: es
 Content-Type: application/json
 
@@ -49,17 +48,11 @@ Content-Type: application/json
 ### logout
 POST {{api_url}}/auth/logout
 Authorization: Bearer {{$dotenv SESSION_SECRET}}
-x-unique-id: 1234567890
+x-unique-id: junforever
 x-lang: es
 Content-Type: application/json
 
 {
-  "userId": "junforever",
   "token": {{token}}
 }
 
-### get revoke tokens
-GET {{api_url}}/auth/get-revoke-tokens
-Authorization: Bearer {{$dotenv SESSION_SECRET}}
-x-unique-id: 1234567890
-x-lang: es
