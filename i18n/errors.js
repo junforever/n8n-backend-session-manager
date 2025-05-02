@@ -36,10 +36,10 @@ export const errors = {
     log_en: 'Connection closed before response was sent.',
   },
   rateLimitError: {
-    es: 'Se han enviado demasiadas peticiones. Por favor, intente de nuevo más tarde.',
-    en: 'Too many requests. Please try again later.',
-    log_es: 'Demasiadas peticiones enviadas al servidor',
-    log_en: 'Too many requests sent',
+    es: 'La conexión ha sido bloqueada por exceso de peticiones, por favor intente de nuevo más tarde.',
+    en: 'Connection has been blocked for too many requests, please try again later.',
+    log_es: 'Conexión bloqueada por exceso de peticiones.',
+    log_en: 'Connection blocked for too many requests.',
   },
   timeoutError: {
     es: 'La petición enviada excedio el tiempo de espera. Por favor, intente de nuevo más tarde.',
@@ -119,10 +119,16 @@ export const errors = {
     log_es: 'Intento de inicio de sesión con credenciales revocadas.',
     log_en: 'Login attempt with revoked credentials.',
   },
-  blockedConnectionError: {
-    es: 'La conexión ha sido bloqueada, por favor intente de nuevo más tarde.',
-    en: 'Connection has been blocked, please try again later.',
-    log_es: 'Conexión bloqueada.',
-    log_en: 'Connection blocked.',
+  redisError: {
+    es: 'Error de comunicación con la base de datos, por favor intente de nuevo más tarde.',
+    en: 'Database communication error, please try again later.',
+    log_es: 'Error de comunicación con Redis.',
+    log_en: 'Communication error with Redis.',
+  },
+  redisOperationError: {
+    es: 'Error de comunicación con la base de datos, por favor intente de nuevo más tarde.',
+    en: 'Database communication error, please try again later.',
+    log_es: 'Error en la operación <operation> con Redis.',
+    log_en: 'Database <operation> operation error with Redis.',
   },
 };

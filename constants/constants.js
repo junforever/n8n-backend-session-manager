@@ -10,6 +10,7 @@ export const ACTIONS_CHAT_NOTIFICATION = 'send_error_chat_message';
 export const AUTH_CONTROLLER_CODE = '1001';
 export const ROOT_CONTROLLER_CODE = '1003';
 export const SANITIZE_CONTROLLER_CODE = '1002';
+export const BLOCKED_CONNECTION_CONTROLLER_CODE = '1004';
 
 //middleware codigo 200x
 export const INVALID_ROUTE_CODE = '2001';

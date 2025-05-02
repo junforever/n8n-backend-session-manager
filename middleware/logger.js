@@ -15,7 +15,7 @@ const transport = new DailyRotateFile({
 });
 
 // Crear el logger con el transporte configurado
-const logger = winston.createLogger({
+export const logger = winston.createLogger({
   level: 'error', // Nivel de log (solo errores)
   format: winston.format.json(), // Los logs se guardarán en formato JSON
 
