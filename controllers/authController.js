@@ -80,7 +80,6 @@ export const verifyToken = (req, res) => {
   try {
     const userData = jwt.verify(token, JWT_SECRET);
     const cached = cache.get(`token_${userData.uniqueId}`);
-    console.log({ cached, userData });
 
     if (!cached || cached !== token) {
       return res

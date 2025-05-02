@@ -15,6 +15,7 @@ import { invalidRoute } from './middleware/invalidRoute.js';
 import { languageValidation } from './middleware/languageValidation.js';
 import { validateConnectionToken } from './middleware/validateConnectionToken.js';
 import { validateRequestHeaders } from './middleware/validateRequestHeaders.js';
+import { validateBlockedConnections } from './middleware/validateBlockedConnections.js';
 
 dotenv.config();
 
@@ -33,6 +34,9 @@ app.use(validateConnectionToken);
 
 // Middleware para validar los encabezados requeridos
 app.use(validateRequestHeaders);
+
+// Middleware para validar las conexiones bloqueadas
+app.use(validateBlockedConnections);
 
 // Middleware para controlar el limite de peticiones por usuario
 app.use(limiter);

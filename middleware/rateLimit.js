@@ -1,10 +1,13 @@
 import rateLimit from 'express-rate-limit';
+import NodeCache from 'node-cache';
 import { createResponse } from '../utils/requestResponse.js';
 import { errors } from '../i18n/errors.js';
 import {
   ACTIONS_CHAT_ALERT_NOTIFICATION,
   RATE_LIMIT_CODE,
 } from '../constants/constants.js';
+
+const cache = new NodeCache();
 
 //se puede aplicar solo a un tipo de peticion
 export const limiter = rateLimit({
@@ -22,7 +25,13 @@ export const limiter = rateLimit({
 
   // Respuesta personalizada cuando se excede el límite
   handler: (req, res, next, options) => {
-    const { lang } = req;
+    const { lang, uniqueId } = req;
+    cache.set(
+      `block_${uniqueId}`,
+      true,
+      parseInt(process.env.BLOCK_EXPIRATION_MINUTES) * 60,
+    );
+
     //options.statusCode 429 (Too Many Requests)
     res
       .status(options.statusCode)

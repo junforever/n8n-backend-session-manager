@@ -119,4 +119,10 @@ export const errors = {
     log_es: 'Intento de inicio de sesión con credenciales revocadas.',
     log_en: 'Login attempt with revoked credentials.',
   },
+  blockedConnectionError: {
+    es: 'La conexión ha sido bloqueada, por favor intente de nuevo más tarde.',
+    en: 'Connection has been blocked, please try again later.',
+    log_es: 'Conexión bloqueada.',
+    log_en: 'Connection blocked.',
+  },
 };
