@@ -36,11 +36,10 @@ export const errors = {
     log_en: 'Connection closed before response was sent.',
   },
   rateLimitError: {
-    es: 'Se han enviado demasiadas peticiones. Por favor, intente de nuevo más tarde (dentro de: <countdown> seg.).',
-    en: 'Too many requests. Please try again later (retry after: <countdown> sec.).',
-    log_es:
-      'Demasiadas peticiones enviadas al servidor, dentro de: <countdown> seg.',
-    log_en: 'Too many requests, retry after: <countdown> sec.',
+    es: 'Se han enviado demasiadas peticiones. Por favor, intente de nuevo más tarde.',
+    en: 'Too many requests. Please try again later.',
+    log_es: 'Demasiadas peticiones enviadas al servidor',
+    log_en: 'Too many requests sent',
   },
   timeoutError: {
     es: 'La petición enviada excedio el tiempo de espera. Por favor, intente de nuevo más tarde.',
