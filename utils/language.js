@@ -1,4 +1,4 @@
-// en caso de que esta falle usar fastText
+// experimental!!!! en caso de que esta falle usar fastText
 import cldFactory from 'cld3-asm';
 
 let detectorInstance = null;
