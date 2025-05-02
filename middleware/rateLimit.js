@@ -30,14 +30,8 @@ export const limiter = rateLimit({
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
-          errors.rateLimitError[lang].replace(
-            /<countdown>/g,
-            res.get('Retry-After'),
-          ),
-          errors.rateLimitError.log_es.replace(
-            /<countdown>/g,
-            res.get('Retry-After'),
-          ),
+          errors.rateLimitError[lang],
+          errors.rateLimitError.log_es,
           RATE_LIMIT_CODE,
         ),
       );
