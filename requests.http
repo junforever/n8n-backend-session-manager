@@ -1,6 +1,6 @@
 @api_url = http://localhost:{{$dotenv PORT}}
-@clientId = 1234567890
-@uniqueId = 1234567890
+@clientId = 445565377
+@uniqueId = 445565377
 
 ### invalid request
 GET {{api_url}}/test

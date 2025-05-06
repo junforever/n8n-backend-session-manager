@@ -26,7 +26,6 @@ export const redisHSet = async (key, field, value, ttl = null) => {
   try {
     const expiration =
       ttl && !isNaN(ttl) && ttl > 0 ? (ttl * 60).toString() : null;
-    console.log(expiration);
     await redisClient.hSet(key, field, value);
     await redisClient.sendCommand([
       'HEXPIRE',
@@ -39,7 +38,6 @@ export const redisHSet = async (key, field, value, ttl = null) => {
     ]);
     return { success: true, data: null };
   } catch (error) {
-    console.log(error);
     return { success: false, data: error.message };
   }
 };
@@ -89,7 +87,6 @@ export const redisHDel = async (key, field) => {
     await redisClient.sendCommand(['HDEL', key, field]);
     return { success: true, data: null };
   } catch (error) {
-    console.log(error);
     return { success: false, data: error.message };
   }
 };
