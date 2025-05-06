@@ -1,6 +1,5 @@
 import express from 'express';
 import timeout from 'connect-timeout';
-import dotenv from 'dotenv';
 
 import { authRouter } from './routes/authRouter.js';
 import { sanitizeRouter } from './routes/sanitizeRouter.js';
@@ -17,7 +16,7 @@ import { validateConnectionToken } from './middleware/validateConnectionToken.js
 import { validateRequestHeaders } from './middleware/validateRequestHeaders.js';
 import { validateBlockedConnections } from './middleware/validateBlockedConnections.js';
 
-dotenv.config();
+//TODO: AGREGAR COMPANY ID COMO UN HEADER MANDATORIO EN LUGAR DE ENVIARLO POR EL BODY
 
 const app = express();
 

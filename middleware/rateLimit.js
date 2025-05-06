@@ -6,7 +6,8 @@ import {
   ACTIONS_ALERT_NOTIFICATION,
   RATE_LIMIT_CODE,
 } from '../constants/constants.js';
-import { addBlockedConnection } from '../controllers/blockedConnectionController.js';
+import { redisSet } from '../controllers/redisController.js';
+import { redisKeysGenerator } from '../utils/redisKeysGenerator.js';
 
 //se puede aplicar solo a un tipo de peticion
 export const limiter = rateLimit({
@@ -24,19 +25,18 @@ export const limiter = rateLimit({
 
   // Respuesta personalizada cuando se excede el límite
   handler: async (req, res, next, options) => {
-    const { lang, uniqueId } = req;
-    const { success, data } = await addBlockedConnection(uniqueId);
+    const { lang, uniqueId, clientId } = req;
+    const { blockUserKey } = redisKeysGenerator(uniqueId, clientId);
+    const { success } = await redisSet(blockUserKey, 'true', 60);
     if (!success) {
       return res
         .status(500)
         .json(
           createResponse(
             false,
-            ACTIONS_ALERT_NOTIFICATION,
-            null,
-            errors.redisOperationError.log_es
-              .replace('<operation>', 'set')
-              .concat(`${data}`),
+            ACTIONS_CHAT_ALERT_NOTIFICATION,
+            errors.redisOperationError[lang],
+            errors.redisOperationError.log_es.replace('<operation>', 'set'),
             RATE_LIMIT_CODE,
           ),
         );

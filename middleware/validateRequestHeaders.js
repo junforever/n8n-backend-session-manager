@@ -7,9 +7,10 @@ import {
 
 export const validateRequestHeaders = (req, res, next) => {
   const uniqueId = req.headers['x-unique-id'];
+  const clientId = req.headers['x-client-id'];
   const lang = req.headers['x-lang'];
 
-  if (!uniqueId || !lang) {
+  if (!uniqueId || !lang || !clientId) {
     return res
       .status(400)
       .json(
@@ -25,5 +26,6 @@ export const validateRequestHeaders = (req, res, next) => {
 
   req.uniqueId = uniqueId;
   req.lang = lang.toLowerCase();
+  req.clientId = clientId;
   next();
 };

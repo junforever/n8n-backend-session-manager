@@ -1,75 +1,84 @@
 import jwt from 'jsonwebtoken';
-import NodeCache from 'node-cache';
 import { createResponse } from '../utils/requestResponse.js';
 import {
   ACTIONS_CHAT_ALERT_NOTIFICATION,
   ACTIONS_CONTINUE,
   AUTH_CONTROLLER_CODE,
+  ACTIONS_CHAT_NOTIFICATION,
 } from '../constants/constants.js';
 import { errors } from '../i18n/errors.js';
+import { redisSet, redisGet, redisDel } from './redisController.js';
+import { redisKeysGenerator } from '../utils/redisKeysGenerator.js';
 
-const cache = new NodeCache();
 const JWT_SECRET = process.env.JWT_SECRET || 'my_super_secret_phrase';
 
-export const generateToken = (req, res) => {
-  const { lang, uniqueId } = req;
-  const { role } = req.body;
-  if (!uniqueId || !role)
+export const generateToken = async (req, res) => {
+  const { lang, uniqueId, clientId } = req;
+  const { role, name } = req.body;
+  const { sessionKey } = redisKeysGenerator(uniqueId, clientId);
+  const ttl = parseInt(process.env.JWT_EXPIRATION_MINUTES) * 60;
+  const payload = {
+    uniqueId,
+    name,
+    role,
+    clientId,
+    exp: Math.floor(Date.now() / 1000) + ttl,
+  };
+
+  const token = jwt.sign(payload, JWT_SECRET);
+
+  //crear el registro de inicio de sesión en redis
+  const resp = await redisSet(res, sessionKey, token, ttl);
+
+  if (!resp.success) {
     return res
-      .status(400)
+      .status(500)
       .json(
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
-          errors.userIdRoleError[lang],
-          errors.userIdRoleError.log_es,
+          errors.redisOperationError[lang],
+          errors.redisOperationError.log_es.replace('<operation>', 'set'),
           AUTH_CONTROLLER_CODE,
         ),
       );
-  const payload = {
-    uniqueId,
-    role,
-    exp:
-      Math.floor(Date.now() / 1000) +
-      parseInt(process.env.JWT_EXPIRATION_MINUTES) * 60,
-  };
-
-  const token = jwt.sign(payload, JWT_SECRET);
-  cache.set(
-    `token_${uniqueId}`,
-    token,
-    parseInt(process.env.JWT_EXPIRATION_MINUTES) * 60,
-  );
+  }
 
   res.json(
     createResponse(true, ACTIONS_CONTINUE, token, null, AUTH_CONTROLLER_CODE),
   );
 };
 
-export const verifyToken = (req, res) => {
-  const { lang } = req;
+export const verifySessionToken = async (req, res) => {
+  const { lang, uniqueId, clientId } = req;
   const { token } = req.body;
-  if (!token)
+  const { role, name } = jwt.verify(token, JWT_SECRET);
+  const { revokedKey, sessionKey } = redisKeysGenerator(uniqueId, clientId);
+
+  // Verificar si el token está en la lista de revocados
+  const revocationResp = await redisGet(revokedKey);
+
+  if (!revocationResp.success) {
     return res
-      .status(400)
+      .status(500)
       .json(
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
-          errors.userTokenError[lang],
-          errors.userTokenError.log_es,
+          errors.redisOperationError[lang],
+          errors.redisOperationError.log_es.replace('<operation>', 'get'),
           AUTH_CONTROLLER_CODE,
         ),
       );
+  }
 
-  // Verificar si el token está en la lista de revocados
-  if (cache.get(`revoked_${token}`)) {
+  if (revocationResp.data === token) {
     return res
       .status(401)
       .json(
         createResponse(
           false,
-          ACTIONS_CHAT_ALERT_NOTIFICATION,
+          ACTIONS_CHAT_NOTIFICATION,
           errors.tokenRevokedError[lang],
           errors.tokenRevokedError.log_es,
           AUTH_CONTROLLER_CODE,
@@ -77,34 +86,24 @@ export const verifyToken = (req, res) => {
       );
   }
 
-  try {
-    const userData = jwt.verify(token, JWT_SECRET);
-    const cached = cache.get(`token_${userData.uniqueId}`);
+  const sessionTokenResp = await redisGet(sessionKey);
 
-    if (!cached || cached !== token) {
-      return res
-        .status(401)
-        .json(
-          createResponse(
-            false,
-            ACTIONS_CHAT_ALERT_NOTIFICATION,
-            errors.expiredTokenError[lang],
-            errors.expiredTokenError.log_es,
-            AUTH_CONTROLLER_CODE,
-          ),
-        );
-    }
-    res.json(
-      createResponse(
-        true,
-        ACTIONS_CONTINUE,
-        userData,
-        null,
-        AUTH_CONTROLLER_CODE,
-      ),
-    );
-  } catch (err) {
-    res
+  if (!sessionTokenResp.success) {
+    return res
+      .status(500)
+      .json(
+        createResponse(
+          false,
+          ACTIONS_CHAT_ALERT_NOTIFICATION,
+          errors.redisOperationError[lang],
+          errors.redisOperationError.log_es.replace('<operation>', 'get'),
+          AUTH_CONTROLLER_CODE,
+        ),
+      );
+  }
+
+  if (!sessionTokenResp.data || sessionTokenResp.data !== token) {
+    return res
       .status(401)
       .json(
         createResponse(
@@ -116,53 +115,62 @@ export const verifyToken = (req, res) => {
         ),
       );
   }
+  res.json(
+    createResponse(
+      true,
+      ACTIONS_CONTINUE,
+      { role, name },
+      null,
+      AUTH_CONTROLLER_CODE,
+    ),
+  );
 };
 
-export const logout = (req, res) => {
-  const { lang, uniqueId } = req;
+export const logout = async (req, res) => {
+  const { lang, uniqueId, clientId } = req;
   const { token } = req.body;
 
-  if (!uniqueId || !token) {
+  const { exp } = jwt.verify(token, JWT_SECRET);
+  const { revokedKey } = redisKeysGenerator(uniqueId, clientId);
+
+  // Definir un TTL mayor al tiempo máximo de sesión activa, 5 minutos adicionales
+  const revokeTTL = exp - Math.floor(Date.now() / 1000) + 5 * 60;
+
+  // Guardar el token revocado en redis con su TTL
+  const revokeResp = await redisSet(revokedKey, token, revokeTTL);
+
+  if (!revokeResp.success) {
     return res
-      .status(400)
+      .status(500)
       .json(
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
-          errors.logoutError[lang],
-          errors.logoutError.log_es,
+          errors.redisOperationError[lang],
+          errors.redisOperationError.log_es.replace('<operation>', 'set'),
           AUTH_CONTROLLER_CODE,
         ),
       );
   }
 
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const exp = decoded.exp;
+  // Eliminar la sesión
+  const sessionResp = await redisDel(sessionKey);
 
-    // Definir un TTL mayor al tiempo máximo de sesión activa, 5 minutos adicionales
-    const revokeTTL = exp - Math.floor(Date.now() / 1000) + 5 * 60;
-
-    // Guardar el token revocado en cache con su TTL
-    cache.set(`revoked_${token}`, true, revokeTTL);
-
-    // Eliminar el token del cache
-    cache.del(`token_${uniqueId}`);
-
-    return res.json(
-      createResponse(true, ACTIONS_CONTINUE, null, null, AUTH_CONTROLLER_CODE),
-    );
-  } catch (err) {
+  if (!sessionResp.success) {
     return res
-      .status(401)
+      .status(500)
       .json(
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
-          errors.sessionAlreadyRevokedError[lang],
-          errors.sessionAlreadyRevokedError.log_es,
+          errors.redisOperationError[lang],
+          errors.redisOperationError.log_es.replace('<operation>', 'del'),
           AUTH_CONTROLLER_CODE,
         ),
       );
   }
+
+  return res.json(
+    createResponse(true, ACTIONS_CONTINUE, null, null, AUTH_CONTROLLER_CODE),
+  );
 };

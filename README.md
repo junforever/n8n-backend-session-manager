@@ -13,7 +13,7 @@ This project provides a backend service built with Node.js and Express.js, desig
 - **Logging:** Comprehensive logging implemented using `winston` with daily log rotation.
 - **Language Detection:** Capable of detecting request language using `cld3-asm`.
 - **Internationalization (i18n):** Supports multiple languages for responses.
-- **Caching:** Utilizes `node-cache` for in-memory caching.
+- **Caching:** Utilizes `redis` for caching.
 - **Environment Configuration:** Uses `.env` files for managing environment variables.
 
 ---
@@ -30,6 +30,7 @@ This project provides a backend service built with Node.js and Express.js, desig
 - cld3-asm
 - dotenv
 - node-cache
+- redis
 - zod
 
 ---
@@ -38,7 +39,8 @@ This project provides a backend service built with Node.js and Express.js, desig
 
 All API requests **must** include the following headers:
 
-- **`x-unique-id`**: A unique identifier for the client or user making the request. This value is crucial for the correct functioning of **Rate Limiting**, as it allows tracking requests per client.
+- **`x-unique-id`**: A unique identifier for the user making the request. This value is crucial for the correct functioning of **Rate Limiting**, as it allows tracking requests per user.
+- **`x-client-id`**: A unique identifier for the client making the request. This value is crucial for the correct functioning of **Rate Limiting**, as it allows tracking requests per client.
 - **`x-lang`**: The preferred language code for responses (e.g., `es` for Spanish, `en` for English). This ensures that error messages and other responses are returned in the appropriate language.
 
 The absence of these headers will result in an error.
