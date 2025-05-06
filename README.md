@@ -101,9 +101,14 @@ The absence of these headers will result in an error.
     - **SESSION_SECRET:** A security token required for authenticating requests. Define this token in the `.env` file. Each incoming request must include this token in the `Authorization` header as a Bearer token (e.g., `Authorization: Bearer <your_token>`) to be processed. This ensures that only authorized clients or processes can interact with the backend.
     - **JWT_EXPIRATION_MINUTES:** JWT expiration time in minutes (e.g., `15` for 15 minutes).
     - **REQUEST_TIMEOUT:** Maximum time allowed for a request to complete before timing out (e.g., `15s`).
-    - **REQUEST_MAX_BODY_SIZE:** Maximum allowed size for the request body (e.g., `10kb`).
+    - **REQUEST_MAX_BODY_SIZE:** Maximum allowed size for the request body (e.g., `10kb`, `1mb`, `10mb`).
     - **RATE_LIMIT_WINDOW_MS:** Time window in seconds for rate limiting (e.g., `60` for 1 minute).
     - **RATE_LIMIT_MAX:** Maximum number of requests allowed per IP address within the defined time window.
+    - **BLOCK_EXPIRATION_MINUTES:** Time window in minutes for blocking a user (e.g., `60` for 1 hour).
+    - **REDIS_USERNAME:** Redis username.
+    - **REDIS_PASSWORD:** Redis password.
+    - **REDIS_HOST:** Redis host.
+    - **REDIS_PORT:** Redis port.
 
 ### Running the Application
 
