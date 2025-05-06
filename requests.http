@@ -1,10 +1,12 @@
 @api_url = http://localhost:{{$dotenv PORT}}
-@clientId = 445565377
-@uniqueId = 445565377
+@clientId = ax4566trt565377
+@uniqueId = trs455-8cfrt-7653ohe
 
 ### invalid request
 GET {{api_url}}/test
 x-unique-id: {{uniqueId}}
+
+
 
 ### valid request
 POST {{api_url}}/sanitize

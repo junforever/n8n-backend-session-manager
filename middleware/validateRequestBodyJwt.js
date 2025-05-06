@@ -9,7 +9,6 @@ import {
   ACTIONS_CHAT_NOTIFICATION,
 } from '../constants/constants.js';
 import { redisGet } from '../controllers/redisController.js';
-import { redisKeysGenerator } from '../utils/redisKeysGenerator.js';
 
 const requestSchema = z.object({
   password: z.string({ required_error: 'passwordRequiredError' }),
@@ -44,7 +43,7 @@ export const validateRequestBodyGenerateJwt = (req, res, next) => {
 };
 
 export const validateRequestBodyVerifyJwt = async (req, res, next) => {
-  const { lang, body, uniqueId, clientId } = req;
+  const { lang, body } = req;
   const partialSchema = requestSchema.pick({
     token: true,
   });
@@ -72,10 +71,9 @@ export const validateRequestBodyVerifyJwt = async (req, res, next) => {
     //verificar que el token sea valido
     const token = body.token;
     const { exp } = jwt.verify(token, JWT_SECRET);
-    const { revokedKey } = redisKeysGenerator(clientId, uniqueId);
 
     // Verificar si el token está en la lista de revocados
-    const revocationResp = await redisGet(revokedKey);
+    const revocationResp = await redisGet(token);
 
     if (!revocationResp.success) {
       return res
@@ -94,7 +92,8 @@ export const validateRequestBodyVerifyJwt = async (req, res, next) => {
         );
     }
 
-    if (revocationResp.data === token) {
+    //si la clave existe significa que el token esta revocado
+    if (revocationResp.success) {
       return res
         .status(401)
         .json(

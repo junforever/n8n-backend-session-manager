@@ -182,13 +182,13 @@ export const verifySessionToken = async (req, res) => {
 export const logout = async (req, res) => {
   const { lang, uniqueId, clientId, sessionExp } = req;
   const { token } = req.body;
-  const { revokedKey, loginKey } = redisKeysGenerator(clientId, uniqueId);
+  const { loginKey } = redisKeysGenerator(clientId, uniqueId);
 
   // Definir un TTL mayor al tiempo máximo de sesión activa, 5 minutos adicionales
   const revokeTTL = sessionExp - Math.floor(Date.now() / 1000) + 5 * 60;
 
   // Guardar el token revocado en redis con su TTL
-  const revokeResp = await redisSet(revokedKey, token, revokeTTL);
+  const revokeResp = await redisSet(token, 'true', revokeTTL);
 
   if (!revokeResp.success) {
     return res
@@ -313,4 +313,33 @@ export const validateRequest = async (req, res) => {
       ),
     );
   }
+};
+
+export const blockUser = async (req, res) => {
+  const { lang, uniqueId, clientId } = req;
+  const { blockUserKey } = redisKeysGenerator(clientId, uniqueId);
+
+  //bloquear el usuario
+  const blockResp = await redisSet(blockUserKey, 'block', 'true');
+
+  if (!blockResp.success) {
+    return res
+      .status(500)
+      .json(
+        createResponse(
+          false,
+          ACTIONS_CHAT_ALERT_NOTIFICATION,
+          errors.redisOperationError[lang],
+          errors.redisOperationError.log_es.replace(
+            '<operation>',
+            'set block user',
+          ),
+          AUTH_CONTROLLER_CODE,
+        ),
+      );
+  }
+
+  return res.json(
+    createResponse(true, ACTIONS_CONTINUE, null, null, AUTH_CONTROLLER_CODE),
+  );
 };
