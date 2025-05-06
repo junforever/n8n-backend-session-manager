@@ -71,7 +71,7 @@ export const validateRequestBodyVerifyJwt = async (req, res, next) => {
   try {
     //verificar que el token sea valido
     const token = body.token;
-    const { role, name, exp } = jwt.verify(token, JWT_SECRET);
+    const { exp } = jwt.verify(token, JWT_SECRET);
     const { revokedKey } = redisKeysGenerator(clientId, uniqueId);
 
     // Verificar si el token está en la lista de revocados
@@ -108,9 +108,7 @@ export const validateRequestBodyVerifyJwt = async (req, res, next) => {
         );
     }
 
-    req.role = role;
-    req.name = name;
-    req.exp = exp;
+    req.sessionExp = exp;
     next();
   } catch (error) {
     let errorType;

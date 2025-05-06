@@ -1,14 +1,18 @@
 @api_url = http://localhost:{{$dotenv PORT}}
+@clientId = 1234567890
+@uniqueId = 1234567890
 
 ### invalid request
-GET {{api_url}}
-Authorization: Bearer {{$dotenv SESSION_SECRET}}
+GET {{api_url}}/test
+x-unique-id: {{uniqueId}}
 
 ### valid request
 POST {{api_url}}/sanitize
 Authorization: Bearer {{$dotenv SESSION_SECRET}}
-x-unique-id: 1234567890
-x-lang: es
+accept-language: es
+x-unique-id: {{uniqueId}}
+x-client-id: {{clientId}}
+
 Content-Type: application/json
 
 {
@@ -21,8 +25,10 @@ Content-Type: application/json
 ### jwt request
 POST {{api_url}}/auth/generate-token
 Authorization: Bearer {{$dotenv SESSION_SECRET}}
-x-unique-id: junforever
-x-lang: es
+accept-language: es
+x-unique-id: {{uniqueId}}
+x-client-id: {{clientId}}
+
 Content-Type: application/json
 
 {
@@ -36,8 +42,10 @@ Content-Type: application/json
 ### jwt validation
 POST {{api_url}}/auth/verify-token
 Authorization: Bearer {{$dotenv SESSION_SECRET}}
-x-unique-id: junforever
-x-lang: es
+accept-language: es
+x-unique-id: {{uniqueId}}
+x-client-id: {{clientId}}
+
 Content-Type: application/json
 
 {
@@ -48,8 +56,9 @@ Content-Type: application/json
 ### logout
 POST {{api_url}}/auth/logout
 Authorization: Bearer {{$dotenv SESSION_SECRET}}
-x-unique-id: junforever
-x-lang: es
+accept-language: es
+x-unique-id: {{uniqueId}}
+x-client-id: {{clientId}}
 Content-Type: application/json
 
 {

@@ -11,7 +11,7 @@ import { redisGet } from '../controllers/redisController.js';
 export const validateBlockedConnections = async (req, res, next) => {
   const { lang, uniqueId, clientId } = req;
   const { blockUserKey } = redisKeysGenerator(clientId, uniqueId);
-  const { success } = await redisGet(blockUserKey);
+  const { success, data } = await redisGet(blockUserKey);
   if (!success) {
     return res
       .status(500)
@@ -25,7 +25,7 @@ export const validateBlockedConnections = async (req, res, next) => {
         ),
       );
   }
-  if (success) {
+  if (data) {
     return res
       .status(200)
       .json(

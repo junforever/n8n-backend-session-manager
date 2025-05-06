@@ -10,21 +10,50 @@ import {
 import { errors } from '../i18n/errors.js';
 import {
   redisSet,
-  redisGet,
-  redisDel,
+  redisHGet,
+  redisHDel,
   redisHGetAll,
+  redisHSet,
 } from './redisController.js';
 import { redisKeysGenerator } from '../utils/redisKeysGenerator.js';
 
-export const generateToken = async (req, res) => {
+const tokenField = 'token';
+
+/**
+ * Genera un token de autenticación para el usuario que se loguea.
+ *
+ * @param {string} uniqueId Identificador único del usuario.
+ * @param {number} ttl Tiempo de vida del token en segundos.
+ * @returns {string} El token de autenticación.
+ */
+
+const generateToken = (uniqueId, ttl) => {
+  const currentTime = Math.floor(Date.now() / 1000);
+  const payload = {
+    uniqueId,
+    iat: currentTime,
+    exp: currentTime + ttl,
+  };
+
+  return jwt.sign(payload, JWT_SECRET);
+};
+
+/**
+ * Inicia sesión de un usuario registrado.
+ *
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {Object} res - Objeto de respuesta HTTP.
+ * @returns {Object} - Objeto de respuesta con el token de autenticación.
+ */
+export const login = async (req, res) => {
   const { lang, uniqueId, clientId } = req;
   const { password: passwordBody } = req.body;
-  const { sessionKey, loginKey } = redisKeysGenerator(clientId, uniqueId);
+  const { loginKey } = redisKeysGenerator(clientId, uniqueId);
   const ttl = parseInt(process.env.JWT_EXPIRATION_MINUTES) * 60;
 
   //obtener informacion del usuario registrado
-  const loginResp = await redisHGetAll(loginKey);
-  if (!loginResp.success) {
+  const passwordResp = await redisHGet(loginKey, 'password');
+  if (!passwordResp.success) {
     return res
       .status(500)
       .json(
@@ -41,41 +70,27 @@ export const generateToken = async (req, res) => {
       );
   }
 
-  const { name, lastName, email, phone, role, isOwner, password } =
-    loginResp.data;
+  const password = passwordResp.data;
   //verificar si la contraseña es correcta
   if (passwordBody !== password) {
-    return res
-      .status(200)
-      .json(
-        createResponse(
-          true,
-          ACTIONS_CHAT_NOTIFICATION,
-          errors.invalidPasswordError[lang],
-          errors.invalidPasswordError.log_es,
-          AUTH_CONTROLLER_CODE,
-        ),
-      );
+    return res.json(
+      createResponse(
+        true,
+        ACTIONS_CHAT_NOTIFICATION,
+        errors.invalidPasswordError[lang],
+        null,
+        AUTH_CONTROLLER_CODE,
+      ),
+    );
   }
 
-  const payload = {
-    uniqueId,
-    name,
-    lastName,
-    role,
-    email,
-    phone,
-    isOwner,
-    clientId,
-    exp: Math.floor(Date.now() / 1000) + ttl,
-  };
+  //generar el token
+  const token = generateToken(uniqueId, ttl);
 
-  const token = jwt.sign(payload, JWT_SECRET);
+  //crear el registro de inicio de sesión en la clave login del usuario
+  const setTokenField = await redisHSet(loginKey, tokenField, token, ttl);
 
-  //crear el registro de inicio de sesión en redis
-  const resp = await redisSet(res, sessionKey, token, ttl);
-
-  if (!resp.success) {
+  if (!setTokenField.success) {
     return res
       .status(500)
       .json(
@@ -85,7 +100,7 @@ export const generateToken = async (req, res) => {
           errors.redisOperationError[lang],
           errors.redisOperationError.log_es.replace(
             '<operation>',
-            'set session',
+            'hset login token',
           ),
           AUTH_CONTROLLER_CODE,
         ),
@@ -97,14 +112,22 @@ export const generateToken = async (req, res) => {
   );
 };
 
+/**
+ * Verifica que el token de sesión sea válido.
+ *
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {Object} res - Objeto de respuesta HTTP.
+ * @returns {Object} - Objeto de respuesta con la información del usuario.
+ */
 export const verifySessionToken = async (req, res) => {
-  const { lang, uniqueId, clientId, role, name } = req;
-  const { token } = req.body;
-  const { sessionKey } = redisKeysGenerator(clientId, uniqueId);
+  const { lang, uniqueId, clientId } = req;
+  const { token: bodyToken } = req.body;
+  const { loginKey } = redisKeysGenerator(clientId, uniqueId);
 
-  //En este punto el token ya fue previamente validado por validateRequestBodyVerifyJwt
-  //Por lo tanto solo se verifica que el token exista en redis
-  const sessionTokenResp = await redisGet(sessionKey);
+  //En este punto el token ENVIADO EN EL BODY ya fue previamente validado por validateRequestBodyVerifyJwt
+  //se validó que exista en el body, que sea un token jwt válido y que no este revocado
+  //Por lo tanto solo se verifica que el token exista en redis en el hash del login
+  const sessionTokenResp = await redisHGetAll(loginKey);
 
   if (!sessionTokenResp.success) {
     return res
@@ -123,7 +146,10 @@ export const verifySessionToken = async (req, res) => {
       );
   }
 
-  if (!sessionTokenResp.data || sessionTokenResp.data !== token) {
+  const { name, lastName, isOwner, phone, role, email, token } =
+    sessionTokenResp.data;
+
+  if (!token || token !== bodyToken) {
     return res
       .status(401)
       .json(
@@ -140,20 +166,26 @@ export const verifySessionToken = async (req, res) => {
     createResponse(
       true,
       ACTIONS_CONTINUE,
-      { role, name },
+      { name, lastName, isOwner, phone, role, email, token },
       null,
       AUTH_CONTROLLER_CODE,
     ),
   );
 };
 
+/**
+ * Cierra la sesión del usuario eliminando el campo token del hash login
+ *
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {Object} res - Objeto de respuesta HTTP.
+ */
 export const logout = async (req, res) => {
-  const { lang, uniqueId, clientId, exp } = req;
+  const { lang, uniqueId, clientId, sessionExp } = req;
   const { token } = req.body;
-  const { revokedKey, sessionKey } = redisKeysGenerator(clientId, uniqueId);
+  const { revokedKey, loginKey } = redisKeysGenerator(clientId, uniqueId);
 
   // Definir un TTL mayor al tiempo máximo de sesión activa, 5 minutos adicionales
-  const revokeTTL = exp - Math.floor(Date.now() / 1000) + 5 * 60;
+  const revokeTTL = sessionExp - Math.floor(Date.now() / 1000) + 5 * 60;
 
   // Guardar el token revocado en redis con su TTL
   const revokeResp = await redisSet(revokedKey, token, revokeTTL);
@@ -176,7 +208,7 @@ export const logout = async (req, res) => {
   }
 
   // Eliminar la sesión
-  const sessionResp = await redisDel(sessionKey);
+  const sessionResp = await redisHDel(loginKey, tokenField);
 
   if (!sessionResp.success) {
     return res
@@ -200,16 +232,21 @@ export const logout = async (req, res) => {
   );
 };
 
-//validar si es un usuario registrado o un cliente
-//si es un usuario registrado:
-// - se valida que este activo
-// - se verifica si tiene una sesion activa
-export const validateUser = async (req, res) => {
+/**
+ * Valida si el usuario es un cliente o un usuario registrado.
+ * Si es un usuario registrado:
+ * - se valida que este activo
+ * - se verifica si tiene una sesion activa
+ *
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {Object} res - Objeto de respuesta HTTP.
+ */
+export const validateRequest = async (req, res) => {
   const { lang, uniqueId, clientId } = req;
-  const { loginKey, sessionKey } = redisKeysGenerator(clientId, uniqueId);
+  const { loginKey } = redisKeysGenerator(clientId, uniqueId);
 
   //validar si es un usuario registrado
-  const loginResp = await redisHGetAll(loginKey);
+  const loginResp = await redisHGet(loginKey, 'isActive');
   if (!loginResp.success) {
     return res
       .status(500)
@@ -232,23 +269,21 @@ export const validateUser = async (req, res) => {
   }
 
   //verificar que el usuario este activo
-  const { isActive } = loginResp.data;
+  const isActive = loginResp.data;
   if (!parseInt(isActive)) {
-    return res
-      .status(200)
-      .json(
-        createResponse(
-          true,
-          ACTIONS_CHAT_NOTIFICATION,
-          errors.userInactiveError[lang],
-          errors.userInactiveError.log_es,
-          AUTH_CONTROLLER_CODE,
-        ),
-      );
+    return res.json(
+      createResponse(
+        true,
+        ACTIONS_CHAT_NOTIFICATION,
+        errors.userInactiveError[lang],
+        null,
+        AUTH_CONTROLLER_CODE,
+      ),
+    );
   }
 
   //verificar si el usuario tiene una sesion activa
-  const sessionResp = await redisGet(sessionKey);
+  const sessionResp = await redisHGet(loginKey, tokenField);
   if (!sessionResp.success) {
     return res
       .status(500)

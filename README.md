@@ -76,6 +76,7 @@ The absence of these headers will result in an error.
 
 - Node.js (Refer to `package.json` for potential version requirements)
 - npm
+- Redis (database) 7.4 or higher
 
 ### Installation
 

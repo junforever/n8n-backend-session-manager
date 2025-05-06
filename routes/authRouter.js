@@ -1,6 +1,6 @@
 import express from 'express';
 import {
-  generateToken,
+  login,
   verifySessionToken,
   logout,
 } from '../controllers/authController.js';
@@ -11,11 +11,7 @@ import {
 
 export const authRouter = express.Router();
 
-authRouter.post(
-  '/generate-token',
-  validateRequestBodyGenerateJwt,
-  generateToken,
-);
+authRouter.post('/login', validateRequestBodyGenerateJwt, login);
 authRouter.post(
   '/verify-token',
   validateRequestBodyVerifyJwt,
