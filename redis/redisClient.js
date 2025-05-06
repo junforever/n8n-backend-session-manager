@@ -22,4 +22,15 @@ redisClient.on('error', (error) =>
   }),
 );
 
-await redisClient.connect();
+// Conexión a Redis
+(async () => {
+  try {
+    await redisClient.connect();
+    console.log('Conexión exitosa a Redis');
+  } catch (error) {
+    logger.error({ time: timestamp, message: errors.redisError.log_es, error });
+    process.exit(1);
+  }
+})();
+
+export default redisClient;

@@ -40,7 +40,7 @@ export const sanitizeRequest = (req, res, next) => {
       }
     }
     next();
-  } catch (error) {
+  } catch (_error) {
     res
       .status(500)
       .json(

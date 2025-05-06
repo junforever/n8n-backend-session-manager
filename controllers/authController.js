@@ -131,7 +131,7 @@ export const logout = async (req, res) => {
   const { token } = req.body;
 
   const { exp } = jwt.verify(token, JWT_SECRET);
-  const { revokedKey } = redisKeysGenerator(uniqueId, clientId);
+  const { revokedKey, sessionKey } = redisKeysGenerator(uniqueId, clientId);
 
   // Definir un TTL mayor al tiempo máximo de sesión activa, 5 minutos adicionales
   const revokeTTL = exp - Math.floor(Date.now() / 1000) + 5 * 60;

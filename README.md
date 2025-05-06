@@ -41,7 +41,7 @@ All API requests **must** include the following headers:
 
 - **`x-unique-id`**: A unique identifier for the user making the request. This value is crucial for the correct functioning of **Rate Limiting**, as it allows tracking requests per user.
 - **`x-client-id`**: A unique identifier for the client making the request. This value is crucial for the correct functioning of **Rate Limiting**, as it allows tracking requests per client.
-- **`x-lang`**: The preferred language code for responses (e.g., `es` for Spanish, `en` for English). This ensures that error messages and other responses are returned in the appropriate language.
+- **`accept-language`**: The preferred language code for responses (e.g., `es-ES` for Spanish, `en-US` for English). This ensures that error messages and other responses are returned in the appropriate language.
 
 The absence of these headers will result in an error.
 

@@ -3,7 +3,6 @@ import { createResponse } from '../utils/requestResponse.js';
 import { errors } from '../i18n/errors.js';
 import {
   ACTIONS_CHAT_ALERT_NOTIFICATION,
-  ACTIONS_ALERT_NOTIFICATION,
   RATE_LIMIT_CODE,
 } from '../constants/constants.js';
 import { redisSet } from '../controllers/redisController.js';

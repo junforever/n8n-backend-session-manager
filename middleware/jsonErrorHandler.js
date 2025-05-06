@@ -5,7 +5,7 @@ import {
   JSON_ERROR_HANDLER_CODE,
 } from '../constants/constants.js';
 
-export const jsonErrorHandler = (err, req, res, next) => {
+export const jsonErrorHandler = (err, req, res, _next) => {
   const { lang } = req;
 
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {

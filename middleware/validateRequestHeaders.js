@@ -8,9 +8,9 @@ import {
 export const validateRequestHeaders = (req, res, next) => {
   const uniqueId = req.headers['x-unique-id'];
   const clientId = req.headers['x-client-id'];
-  const lang = req.headers['x-lang'];
+  const langHeader = req.headers['accept-language'];
 
-  if (!uniqueId || !lang || !clientId) {
+  if (!uniqueId || !langHeader || !clientId) {
     return res
       .status(400)
       .json(
@@ -23,9 +23,11 @@ export const validateRequestHeaders = (req, res, next) => {
         ),
       );
   }
+  // Extraer solo el primer idioma
+  const lang = langHeader.split(',')[0].split('-')[0].toLowerCase();
 
   req.uniqueId = uniqueId;
-  req.lang = lang.toLowerCase();
+  req.lang = lang;
   req.clientId = clientId;
   next();
 };
