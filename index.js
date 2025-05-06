@@ -16,8 +16,6 @@ import { validateConnectionToken } from './middleware/validateConnectionToken.js
 import { validateRequestHeaders } from './middleware/validateRequestHeaders.js';
 import { validateBlockedConnections } from './middleware/validateBlockedConnections.js';
 
-//TODO: AGREGAR COMPANY ID COMO UN HEADER MANDATORIO EN LUGAR DE ENVIARLO POR EL BODY
-
 const app = express();
 
 const PORT = process.env.PORT || 3000;

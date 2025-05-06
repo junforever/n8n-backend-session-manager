@@ -5,22 +5,67 @@ import {
   ACTIONS_CONTINUE,
   AUTH_CONTROLLER_CODE,
   ACTIONS_CHAT_NOTIFICATION,
+  JWT_SECRET,
 } from '../constants/constants.js';
 import { errors } from '../i18n/errors.js';
-import { redisSet, redisGet, redisDel } from './redisController.js';
+import {
+  redisSet,
+  redisGet,
+  redisDel,
+  redisHGetAll,
+} from './redisController.js';
 import { redisKeysGenerator } from '../utils/redisKeysGenerator.js';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'my_super_secret_phrase';
 
 export const generateToken = async (req, res) => {
   const { lang, uniqueId, clientId } = req;
-  const { role, name } = req.body;
-  const { sessionKey } = redisKeysGenerator(uniqueId, clientId);
+  const { password: passwordBody } = req.body;
+  const { sessionKey, loginKey } = redisKeysGenerator(clientId, uniqueId);
   const ttl = parseInt(process.env.JWT_EXPIRATION_MINUTES) * 60;
+
+  //obtener informacion del usuario registrado
+  const loginResp = await redisHGetAll(loginKey);
+  if (!loginResp.success) {
+    return res
+      .status(500)
+      .json(
+        createResponse(
+          false,
+          ACTIONS_CHAT_ALERT_NOTIFICATION,
+          errors.redisOperationError[lang],
+          errors.redisOperationError.log_es.replace(
+            '<operation>',
+            'get login data',
+          ),
+          AUTH_CONTROLLER_CODE,
+        ),
+      );
+  }
+
+  const { name, lastName, email, phone, role, isOwner, password } =
+    loginResp.data;
+  //verificar si la contraseña es correcta
+  if (passwordBody !== password) {
+    return res
+      .status(200)
+      .json(
+        createResponse(
+          true,
+          ACTIONS_CHAT_NOTIFICATION,
+          errors.invalidPasswordError[lang],
+          errors.invalidPasswordError.log_es,
+          AUTH_CONTROLLER_CODE,
+        ),
+      );
+  }
+
   const payload = {
     uniqueId,
     name,
+    lastName,
     role,
+    email,
+    phone,
+    isOwner,
     clientId,
     exp: Math.floor(Date.now() / 1000) + ttl,
   };
@@ -38,7 +83,10 @@ export const generateToken = async (req, res) => {
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
           errors.redisOperationError[lang],
-          errors.redisOperationError.log_es.replace('<operation>', 'set'),
+          errors.redisOperationError.log_es.replace(
+            '<operation>',
+            'set session',
+          ),
           AUTH_CONTROLLER_CODE,
         ),
       );
@@ -50,42 +98,12 @@ export const generateToken = async (req, res) => {
 };
 
 export const verifySessionToken = async (req, res) => {
-  const { lang, uniqueId, clientId } = req;
+  const { lang, uniqueId, clientId, role, name } = req;
   const { token } = req.body;
-  const { role, name } = jwt.verify(token, JWT_SECRET);
-  const { revokedKey, sessionKey } = redisKeysGenerator(uniqueId, clientId);
+  const { sessionKey } = redisKeysGenerator(clientId, uniqueId);
 
-  // Verificar si el token está en la lista de revocados
-  const revocationResp = await redisGet(revokedKey);
-
-  if (!revocationResp.success) {
-    return res
-      .status(500)
-      .json(
-        createResponse(
-          false,
-          ACTIONS_CHAT_ALERT_NOTIFICATION,
-          errors.redisOperationError[lang],
-          errors.redisOperationError.log_es.replace('<operation>', 'get'),
-          AUTH_CONTROLLER_CODE,
-        ),
-      );
-  }
-
-  if (revocationResp.data === token) {
-    return res
-      .status(401)
-      .json(
-        createResponse(
-          false,
-          ACTIONS_CHAT_NOTIFICATION,
-          errors.tokenRevokedError[lang],
-          errors.tokenRevokedError.log_es,
-          AUTH_CONTROLLER_CODE,
-        ),
-      );
-  }
-
+  //En este punto el token ya fue previamente validado por validateRequestBodyVerifyJwt
+  //Por lo tanto solo se verifica que el token exista en redis
   const sessionTokenResp = await redisGet(sessionKey);
 
   if (!sessionTokenResp.success) {
@@ -96,7 +114,10 @@ export const verifySessionToken = async (req, res) => {
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
           errors.redisOperationError[lang],
-          errors.redisOperationError.log_es.replace('<operation>', 'get'),
+          errors.redisOperationError.log_es.replace(
+            '<operation>',
+            'get session',
+          ),
           AUTH_CONTROLLER_CODE,
         ),
       );
@@ -127,11 +148,9 @@ export const verifySessionToken = async (req, res) => {
 };
 
 export const logout = async (req, res) => {
-  const { lang, uniqueId, clientId } = req;
+  const { lang, uniqueId, clientId, exp } = req;
   const { token } = req.body;
-
-  const { exp } = jwt.verify(token, JWT_SECRET);
-  const { revokedKey, sessionKey } = redisKeysGenerator(uniqueId, clientId);
+  const { revokedKey, sessionKey } = redisKeysGenerator(clientId, uniqueId);
 
   // Definir un TTL mayor al tiempo máximo de sesión activa, 5 minutos adicionales
   const revokeTTL = exp - Math.floor(Date.now() / 1000) + 5 * 60;
@@ -147,7 +166,10 @@ export const logout = async (req, res) => {
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
           errors.redisOperationError[lang],
-          errors.redisOperationError.log_es.replace('<operation>', 'set'),
+          errors.redisOperationError.log_es.replace(
+            '<operation>',
+            'set revoked',
+          ),
           AUTH_CONTROLLER_CODE,
         ),
       );
@@ -164,7 +186,10 @@ export const logout = async (req, res) => {
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
           errors.redisOperationError[lang],
-          errors.redisOperationError.log_es.replace('<operation>', 'del'),
+          errors.redisOperationError.log_es.replace(
+            '<operation>',
+            'del session',
+          ),
           AUTH_CONTROLLER_CODE,
         ),
       );
@@ -173,4 +198,84 @@ export const logout = async (req, res) => {
   return res.json(
     createResponse(true, ACTIONS_CONTINUE, null, null, AUTH_CONTROLLER_CODE),
   );
+};
+
+//validar si es un usuario registrado o un cliente
+//si es un usuario registrado:
+// - se valida que este activo
+// - se verifica si tiene una sesion activa
+export const validateUser = async (req, res) => {
+  const { lang, uniqueId, clientId } = req;
+  const { loginKey, sessionKey } = redisKeysGenerator(clientId, uniqueId);
+
+  //validar si es un usuario registrado
+  const loginResp = await redisHGetAll(loginKey);
+  if (!loginResp.success) {
+    return res
+      .status(500)
+      .json(
+        createResponse(
+          false,
+          ACTIONS_CHAT_ALERT_NOTIFICATION,
+          errors.redisOperationError[lang],
+          errors.redisOperationError.log_es.replace('<operation>', 'get login'),
+          AUTH_CONTROLLER_CODE,
+        ),
+      );
+  }
+
+  //es un cliente
+  if (!loginResp.data) {
+    return res.json(
+      createResponse(true, ACTIONS_CONTINUE, null, null, AUTH_CONTROLLER_CODE),
+    );
+  }
+
+  //verificar que el usuario este activo
+  const { isActive } = loginResp.data;
+  if (!parseInt(isActive)) {
+    return res
+      .status(200)
+      .json(
+        createResponse(
+          true,
+          ACTIONS_CHAT_NOTIFICATION,
+          errors.userInactiveError[lang],
+          errors.userInactiveError.log_es,
+          AUTH_CONTROLLER_CODE,
+        ),
+      );
+  }
+
+  //verificar si el usuario tiene una sesion activa
+  const sessionResp = await redisGet(sessionKey);
+  if (!sessionResp.success) {
+    return res
+      .status(500)
+      .json(
+        createResponse(
+          false,
+          ACTIONS_CHAT_ALERT_NOTIFICATION,
+          errors.redisOperationError[lang],
+          errors.redisOperationError.log_es.replace(
+            '<operation>',
+            'get active session',
+          ),
+          AUTH_CONTROLLER_CODE,
+        ),
+      );
+  }
+
+  //retorno el token de la sesion, si el token es null significa que es un usuario pero no tiene sesion activa
+  if (sessionResp.data) {
+    return res.json(
+      createResponse(
+        true,
+        ACTIONS_CONTINUE,
+        { token: sessionResp.data },
+        null,
+        AUTH_CONTROLLER_CODE,
+      ),
+    );
+  }
 };

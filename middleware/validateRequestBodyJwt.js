@@ -1,30 +1,25 @@
 import { z } from 'zod';
+import jwt from 'jsonwebtoken';
 import { createResponse } from '../utils/requestResponse.js';
 import { errors } from '../i18n/errors.js';
 import {
   ACTIONS_CHAT_ALERT_NOTIFICATION,
   VALIDATE_REQUEST_BODY_CODE,
+  JWT_SECRET,
+  ACTIONS_CHAT_NOTIFICATION,
 } from '../constants/constants.js';
+import { redisGet } from '../controllers/redisController.js';
+import { redisKeysGenerator } from '../utils/redisKeysGenerator.js';
 
 const requestSchema = z.object({
-  role: z
-    .string({
-      required_error: 'roleRequiredError',
-    })
-    .min(4, { message: 'roleMinLengthError' }),
-  name: z
-    .string({
-      required_error: 'nameRequiredError',
-    })
-    .min(3, { message: 'nameMinLengthError' }),
+  password: z.string({ required_error: 'passwordRequiredError' }),
   token: z.string({ required_error: 'tokenRequiredError' }),
 });
 
 export const validateRequestBodyGenerateJwt = (req, res, next) => {
   const { lang, body } = req;
   const partialSchema = requestSchema.pick({
-    role: true,
-    name: true,
+    password: true,
   });
   const validation = partialSchema.safeParse(body);
 
@@ -48,13 +43,14 @@ export const validateRequestBodyGenerateJwt = (req, res, next) => {
   next();
 };
 
-export const validateRequestBodyVerifyJwt = (req, res, next) => {
-  const { lang, body } = req;
+export const validateRequestBodyVerifyJwt = async (req, res, next) => {
+  const { lang, body, uniqueId, clientId } = req;
   const partialSchema = requestSchema.pick({
     token: true,
   });
   const validation = partialSchema.safeParse(body);
 
+  //verificar que el body tenga el token
   if (!validation.success) {
     const zodErrors = validation.error.errors.map(
       (err) => errors[err.message][lang],
@@ -72,5 +68,69 @@ export const validateRequestBodyVerifyJwt = (req, res, next) => {
       );
   }
 
-  next();
+  try {
+    //verificar que el token sea valido
+    const token = body.token;
+    const { role, name, exp } = jwt.verify(token, JWT_SECRET);
+    const { revokedKey } = redisKeysGenerator(clientId, uniqueId);
+
+    // Verificar si el token está en la lista de revocados
+    const revocationResp = await redisGet(revokedKey);
+
+    if (!revocationResp.success) {
+      return res
+        .status(500)
+        .json(
+          createResponse(
+            false,
+            ACTIONS_CHAT_ALERT_NOTIFICATION,
+            errors.redisOperationError[lang],
+            errors.redisOperationError.log_es.replace(
+              '<operation>',
+              'get revoked',
+            ),
+            VALIDATE_REQUEST_BODY_CODE,
+          ),
+        );
+    }
+
+    if (revocationResp.data === token) {
+      return res
+        .status(401)
+        .json(
+          createResponse(
+            false,
+            ACTIONS_CHAT_NOTIFICATION,
+            errors.tokenRevokedError[lang],
+            errors.tokenRevokedError.log_es,
+            VALIDATE_REQUEST_BODY_CODE,
+          ),
+        );
+    }
+
+    req.role = role;
+    req.name = name;
+    req.exp = exp;
+    next();
+  } catch (error) {
+    let errorType;
+    if (error instanceof jwt.TokenExpiredError) {
+      errorType = 'expirado';
+    } else if (error instanceof jwt.JsonWebTokenError) {
+      errorType = 'invalido';
+    } else {
+      errorType = `otro (${error.message})`;
+    }
+    return res
+      .status(401)
+      .json(
+        createResponse(
+          false,
+          ACTIONS_CHAT_NOTIFICATION,
+          errors.invalidSessionTokenError[lang],
+          `errors.invalidSessionTokenError.log_es (${errorType})`,
+          VALIDATE_REQUEST_BODY_CODE,
+        ),
+      );
+  }
 };

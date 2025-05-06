@@ -65,11 +65,11 @@ export const errors = {
     log_es: 'Sesión expirada.',
     log_en: 'Session expired.',
   },
-  invalidTokenError: {
+  invalidSecurityTokenError: {
     es: 'Acceso denegado, si el problema persiste, por favor contacte al administrador.',
     en: 'Access denied, if the problem persists, please contact the administrator.',
-    log_es: 'Acceso denegado.',
-    log_en: 'Access denied.',
+    log_es: 'Acceso denegado. Token de seguridad inválido.',
+    log_en: 'Access denied. Invalid security token.',
   },
   bodySizeError: {
     es: 'El tamaño del contenido de la petición excede el máximo permitido, por favor intente enviar un contenido más pequeño.',
@@ -130,5 +130,35 @@ export const errors = {
     en: 'Database communication error, please try again later.',
     log_es: 'Error en la operación <operation> con Redis.',
     log_en: 'Database <operation> operation error with Redis.',
+  },
+  invalidSessionTokenError: {
+    es: 'La sesión ha caducado, por favor vuelva a iniciar sesión.',
+    en: 'Session expired, please log in again.',
+    log_es: 'Sesión expirada. Token de sesión inválido.',
+    log_en: 'Session expired. Invalid session token.',
+  },
+  passwordRequiredError: {
+    es: 'El campo password es obligatorio.',
+    en: 'The password field is required.',
+    log_es: 'El campo password es obligatorio.',
+    log_en: 'The password field is required.',
+  },
+  tokenRequiredError: {
+    es: 'El token de sesión es obligatorio.',
+    en: 'The session token is required.',
+    log_es: 'El token de sesión es obligatorio.',
+    log_en: 'The session token is required.',
+  },
+  userInactiveError: {
+    es: 'El usuario no esta activo, por favor contacte al administrador para restablecer el acceso.',
+    en: 'The user is not active, please contact the administrator to reset access.',
+    log_es: 'Intento de acceso con usuario inactivo.',
+    log_en: 'User inactive access attempt.',
+  },
+  invalidPasswordError: {
+    es: 'La contraseña es incorrecta.',
+    en: 'The password is incorrect.',
+    log_es: 'Intento de acceso con contraseña incorrecta.',
+    log_en: 'Invalid password access attempt.',
   },
 };

@@ -21,9 +21,20 @@ export const redisSet = async (key, value, ttl = null) => {
   }
 };
 
+//obtener valor string de una clave
 export const redisGet = async (key) => {
   try {
     const value = await redisClient.get(key);
+    return { success: true, data: value };
+  } catch (error) {
+    return { success: false, data: error.message };
+  }
+};
+
+//obtener el objeto completo (hash) de una clave
+export const redisHGetAll = async (key) => {
+  try {
+    const value = await redisClient.hGetAll(key);
     return { success: true, data: value };
   } catch (error) {
     return { success: false, data: error.message };

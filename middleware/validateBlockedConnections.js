@@ -10,7 +10,7 @@ import { redisGet } from '../controllers/redisController.js';
 
 export const validateBlockedConnections = async (req, res, next) => {
   const { lang, uniqueId, clientId } = req;
-  const { blockUserKey } = redisKeysGenerator(uniqueId, clientId);
+  const { blockUserKey } = redisKeysGenerator(clientId, uniqueId);
   const { success } = await redisGet(blockUserKey);
   if (!success) {
     return res

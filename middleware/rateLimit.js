@@ -25,7 +25,7 @@ export const limiter = rateLimit({
   // Respuesta personalizada cuando se excede el límite
   handler: async (req, res, next, options) => {
     const { lang, uniqueId, clientId } = req;
-    const { blockUserKey } = redisKeysGenerator(uniqueId, clientId);
+    const { blockUserKey } = redisKeysGenerator(clientId, uniqueId);
     const { success } = await redisSet(blockUserKey, 'true', 60);
     if (!success) {
       return res

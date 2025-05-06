@@ -1,3 +1,6 @@
+export const JWT_SECRET =
+  process.env.JWT_SECRET || 'bXlfc3VwZXJfc2VjcmV0X3BocmFzZQ==';
+
 export const ACTIONS_DO_NOTHING = 'nothing';
 export const ACTIONS_CONTINUE = 'continue';
 export const ACTIONS_CHAT_ALERT_NOTIFICATION = 'chat_alert_notification';
