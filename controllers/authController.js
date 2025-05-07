@@ -263,6 +263,7 @@ export const validateRequest = async (req, res) => {
 
   //validar si es un usuario registrado
   const loginResp = await redisHGet(loginKey, 'isActive');
+
   if (!loginResp.success) {
     return res
       .status(500)
@@ -318,17 +319,15 @@ export const validateRequest = async (req, res) => {
   }
 
   //retorno el token de la sesion, si el token es null significa que es un usuario pero no tiene sesion activa
-  if (sessionResp.data) {
-    return res.json(
-      createResponse(
-        true,
-        ACTIONS_CONTINUE,
-        { token: sessionResp.data },
-        null,
-        AUTH_CONTROLLER_CODE,
-      ),
-    );
-  }
+  return res.json(
+    createResponse(
+      true,
+      ACTIONS_CONTINUE,
+      { token: sessionResp.data },
+      null,
+      AUTH_CONTROLLER_CODE,
+    ),
+  );
 };
 
 /**
