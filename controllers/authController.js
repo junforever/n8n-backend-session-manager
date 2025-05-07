@@ -24,7 +24,7 @@ const tokenField = 'token';
  * Genera un token de autenticación para el usuario que se loguea.
  *
  * @param {string} uniqueId Identificador único del usuario.
- * @param {number} ttl Tiempo de vida del token en segundos.
+ * @param {number} ttl Tiempo de vida del token en minutos.
  * @returns {string} El token de autenticación.
  */
 
@@ -32,7 +32,7 @@ const generateToken = (uniqueId, ttl) => {
   const currentTime = Math.floor(Date.now() / 1000);
   const payload = {
     uniqueId,
-    exp: currentTime + ttl,
+    exp: currentTime + ttl * 60,
   };
 
   return jwt.sign(payload, JWT_SECRET);
@@ -49,7 +49,7 @@ export const login = async (req, res) => {
   const { lang, uniqueId, clientId } = req;
   const { password: passwordBody } = req.body;
   const { loginKey } = redisKeysGenerator(clientId, uniqueId);
-  const ttl = parseInt(process.env.JWT_EXPIRATION_MINUTES) * 60;
+  const ttl = parseInt(process.env.JWT_EXPIRATION_MINUTES);
 
   //obtener informacion del usuario registrado
   const passwordResp = await redisHGet(loginKey, 'password');
@@ -71,7 +71,6 @@ export const login = async (req, res) => {
   }
 
   const password = passwordResp.data;
-  //TODO: try catch
   try {
     const match = await argon2.verify(password, passwordBody);
     //verificar si la contraseña es correcta
@@ -165,7 +164,6 @@ export const verifySessionToken = async (req, res) => {
   const { name, lastName, isOwner, phone, role, email, token } =
     sessionTokenResp.data;
 
-  console.log({ token, bodyToken });
   if (!token || token !== bodyToken) {
     return res
       .status(401)
@@ -201,8 +199,9 @@ export const logout = async (req, res) => {
   const { token } = req.body;
   const { loginKey } = redisKeysGenerator(clientId, uniqueId);
 
-  // Definir un TTL mayor al tiempo máximo de sesión activa, 5 minutos adicionales
-  const revokeTTL = sessionExp - Math.floor(Date.now() / 1000) + 5 * 60;
+  // Definir un TTL 5 minutos mayor al tiempo de sesión restante
+  // se divide para 60 porque el redisSet espera un valor en minutos
+  const revokeTTL = (sessionExp - Math.floor(Date.now() / 1000) + 5 * 60) / 60;
 
   // Guardar el token revocado en redis con su TTL
   const revokeResp = await redisSet(token, 'true', revokeTTL);

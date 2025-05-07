@@ -125,7 +125,7 @@ export const validateRequestBodyVerifyJwt = async (req, res, next) => {
           false,
           ACTIONS_CHAT_NOTIFICATION,
           errors.invalidSessionTokenError[lang],
-          `errors.invalidSessionTokenError.log_es (${errorType})`,
+          `${errors.invalidSessionTokenError.log_es} (${errorType})`,
           VALIDATE_REQUEST_BODY_CODE,
         ),
       );
