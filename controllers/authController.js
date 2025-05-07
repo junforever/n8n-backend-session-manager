@@ -331,6 +331,12 @@ export const validateRequest = async (req, res) => {
   }
 };
 
+/**
+ * Bloquea un usuario.
+ *
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {Object} res - Objeto de respuesta HTTP.
+ */
 export const blockUser = async (req, res) => {
   const { lang, uniqueId, clientId } = req;
   const { blockUserKey } = redisKeysGenerator(clientId, uniqueId);

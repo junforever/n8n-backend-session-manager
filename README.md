@@ -103,6 +103,28 @@ Represents the action to be taken in n8n flow according to the response of the b
 
 --
 
+## Available Routes
+
+This section provides a brief overview of all the available API routes in this application.
+
+### Root Routes
+
+- `GET /`: Base endpoint of the application.
+
+### Auth Routes (`/auth`)
+
+- `POST /auth/login`: Authenticates a user and returns a session token.
+- `POST /auth/verify-token`: Verifies an existing session token.
+- `POST /auth/logout`: Invalidates a user's session token.
+- `GET /auth/validate`: Validates the current request's session (implementation specific).
+- `POST /auth/block-user`: Blocks a user (implementation specific).
+
+### Sanitize Routes (`/sanitize`)
+
+- `POST /sanitize/`: Endpoint for input sanitization (implementation specific).
+
+--
+
 ## Getting Started
 
 ### Prerequisites

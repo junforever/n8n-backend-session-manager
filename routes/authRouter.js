@@ -3,6 +3,7 @@ import {
   login,
   verifySessionToken,
   logout,
+  validateRequest,
 } from '../controllers/authController.js';
 import {
   validateRequestBodyGenerateJwt,
@@ -18,3 +19,5 @@ authRouter.post(
   verifySessionToken,
 );
 authRouter.post('/logout', validateRequestBodyVerifyJwt, logout);
+authRouter.get('/validate', validateRequest);
+authRouter.post('/block-user', validateRequest);
