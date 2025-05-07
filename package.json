@@ -12,6 +12,7 @@
     "lint": "npx eslint ."
   },
   "dependencies": {
+    "argon2": "^0.43.0",
     "cld3-asm": "^1.0.1",
     "connect-timeout": "^1.9.0",
     "date-fns": "^4.1.0",

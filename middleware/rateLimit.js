@@ -27,6 +27,7 @@ export const limiter = rateLimit({
     const { lang, uniqueId, clientId } = req;
     const { blockUserKey } = redisKeysGenerator(clientId, uniqueId);
     const { success } = await redisSet(blockUserKey, 'true', 60);
+
     if (!success) {
       return res
         .status(500)

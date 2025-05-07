@@ -1,10 +1,11 @@
 @api_url = http://localhost:{{$dotenv PORT}}
-@clientId = ax4566trt565377
-@uniqueId = trs455-8cfrt-7653ohe
+@clientId = gk4hy76trt56jioa
+@uniqueId = 78dtges-pef6y8-drtohe55
+
 
 ### invalid request
-GET {{api_url}}/test
-x-unique-id: {{uniqueId}}
+GET {{api_url}}
+x-client-id: {{clientId}}
 
 
 
@@ -14,7 +15,6 @@ Authorization: Bearer {{$dotenv SESSION_SECRET}}
 accept-language: es
 x-unique-id: {{uniqueId}}
 x-client-id: {{clientId}}
-
 Content-Type: application/json
 
 {
@@ -24,30 +24,29 @@ Content-Type: application/json
 }
 
 
-### jwt request
-POST {{api_url}}/auth/generate-token
+### login
+POST {{api_url}}/auth/login
 Authorization: Bearer {{$dotenv SESSION_SECRET}}
 accept-language: es
 x-unique-id: {{uniqueId}}
 x-client-id: {{clientId}}
-
 Content-Type: application/json
 
 {
-  "role": "admin"
+  "password": "mipassword"
 }
 
 ###
 
 @token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVJZCI6Imp1bmZvcmV2ZXIiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NDYwNDU1NjcsImlhdCI6MTc0NjA0NDY2N30.0rbg2KT_McpPAecQ4bgGGAmj81dCJ-1XgSITxNDSftw"
 
-### jwt validation
+
+### jwt verification
 POST {{api_url}}/auth/verify-token
 Authorization: Bearer {{$dotenv SESSION_SECRET}}
 accept-language: es
 x-unique-id: {{uniqueId}}
 x-client-id: {{clientId}}
-
 Content-Type: application/json
 
 {

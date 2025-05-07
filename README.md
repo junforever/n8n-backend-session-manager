@@ -1,6 +1,10 @@
 # JWT Backend Session Manager
 
-This project provides a backend service built with Node.js and Express.js, designed to manage authentication, authorization, rate limiting, timeouts, logging, and security features, potentially acting as a gateway or middleware for another service like n8n.
+This project provides a backend service built with Node.js and Express.js, designed to handle authentication, authorization, rate limiting, timeouts, logging, and security. It can serve as a gateway or middleware layer for n8n workflows. The backend is intended to integrate with a chat-based agent (via Telegram and/or WhatsApp) used in n8n.
+
+To avoid maintaining separate agents for business clients and staff members, this backend was created to manage both roles within a single system. When a message is received through the chat, the user’s unique chat ID is sent to this backend to determine whether the user is a staff member or a business client, and the appropriate flow is triggered.
+
+If the user is a staff member, the backend checks their authentication status and routes them accordingly. If the user is a business client, authentication is not required, and the request is routed directly. Staff members are granted role-based permissions to perform specific actions within the n8n workflows.
 
 ---
 
@@ -32,6 +36,7 @@ This project provides a backend service built with Node.js and Express.js, desig
 - node-cache
 - redis
 - zod
+- argon2
 
 ---
 
@@ -56,10 +61,13 @@ The absence of these headers will result in an error.
 ├── i18n/              # Internationalization files
 ├── logs/              # Application logs
 ├── middleware/        # Express middleware (auth, rate limit, sanitize, etc.)
+|-- redis/             # Redis client implementation
 ├── routes/            # API route definitions
 ├── utils/             # Utility functions
 ├── .env.example       # Example environment variables
 ├── .env               # Environment variables (ignored by git)
+├── .gitignore         # Git ignore file
+├── eslint.config.js   # ESLint configuration
 ├── index.js           # Application entry point
 ├── package.json       # Project metadata and dependencies
 ├── Procfile           # Deployment configuration (e.g., Heroku)
@@ -69,6 +77,31 @@ The absence of these headers will result in an error.
 ```
 
 ---
+
+## Constants Actions
+
+Represents the action to be taken in n8n flow according to the response of the backend.
+
+- ACTIONS_DO_NOTHING: Do nothing.
+- ACTIONS_CONTINUE: Continue to the next step.
+- ACTIONS_CHAT_ALERT_NOTIFICATION: Send an error message in chat as well as an alert notification to the manager about an error in backend.
+- ACTIONS_ALERT_NOTIFICATION: Send an alert notification to the manager about an error in backend.
+- ACTIONS_CHAT_NOTIFICATION: Send an error message in chat, this error is not related to backend.
+
+--
+
+## How it works
+
+- The keys of redis are generated using the following format: `clientId:uniqueId:login` and `clientId:uniqueId:block`, one for staff login and one for register blocked staff/users.
+- All the staff members must be registered in redis.
+- The staff members data must be stored in redis using a hash type with the following fields: `name`, `lastName`, `isOwner`, `phone`, `role`, `email`, `password` and `isActive`, feel free to change the structure according to your requirements.
+- This project use passwords encrypted with argon2.
+- A user or staff member can be automatically blocked for some minutes (BLOCK_EXPIRATION_MINUTES) after exceeding a certain number of request (RATE_LIMIT_MAX) in a certain time window (RATE_LIMIT_WINDOW_MS).
+- Only staff members can login to the system, business clients can't login.
+- When a staff member logs in, a session is created and a token is generated. This token is used to authenticate the staff member in the system.
+- When a staff member logs out, the token that was assigned to them is temporarily stored in Redis as revoked token with the same value as key and a TTL set to 5 minutes beyond its original expiration time (e.g., if the token was set to expire at 8:00, the TTL will be set to 8:05). This serves as a security measure to prevent the reuse of that token for logging in.
+
+--
 
 ## Getting Started
 

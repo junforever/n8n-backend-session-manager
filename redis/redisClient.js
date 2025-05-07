@@ -32,5 +32,3 @@ redisClient.on('error', (error) =>
     process.exit(1);
   }
 })();
-
-export default redisClient;

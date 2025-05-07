@@ -32,8 +32,8 @@ export const validateRequestBodyGenerateJwt = (req, res, next) => {
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
-          `${errors.bodyValidationError[lang]} : ${zodErrors.join(' ')}`,
-          errors.bodyValidationError.log_es,
+          errors.bodyValidationError[lang],
+          `${errors.bodyValidationError.log_es} : ${zodErrors.join(' ')}`,
           VALIDATE_REQUEST_BODY_CODE,
         ),
       );
@@ -60,8 +60,8 @@ export const validateRequestBodyVerifyJwt = async (req, res, next) => {
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
-          `${errors.bodyValidationError[lang]} : ${zodErrors.join(' ')}`,
-          errors.bodyValidationError.log_es,
+          errors.bodyValidationError[lang],
+          `${errors.bodyValidationError.log_es} : ${zodErrors.join(' ')}`,
           VALIDATE_REQUEST_BODY_CODE,
         ),
       );
@@ -93,7 +93,7 @@ export const validateRequestBodyVerifyJwt = async (req, res, next) => {
     }
 
     //si la clave existe significa que el token esta revocado
-    if (revocationResp.success) {
+    if (revocationResp.data) {
       return res
         .status(401)
         .json(

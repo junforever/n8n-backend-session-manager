@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import argon2 from 'argon2';
 import { createResponse } from '../utils/requestResponse.js';
 import {
   ACTIONS_CHAT_ALERT_NOTIFICATION,
@@ -31,7 +32,6 @@ const generateToken = (uniqueId, ttl) => {
   const currentTime = Math.floor(Date.now() / 1000);
   const payload = {
     uniqueId,
-    iat: currentTime,
     exp: currentTime + ttl,
   };
 
@@ -71,17 +71,33 @@ export const login = async (req, res) => {
   }
 
   const password = passwordResp.data;
-  //verificar si la contraseña es correcta
-  if (passwordBody !== password) {
-    return res.json(
-      createResponse(
-        true,
-        ACTIONS_CHAT_NOTIFICATION,
-        errors.invalidPasswordError[lang],
-        null,
-        AUTH_CONTROLLER_CODE,
-      ),
-    );
+  //TODO: try catch
+  try {
+    const match = await argon2.verify(password, passwordBody);
+    //verificar si la contraseña es correcta
+    if (!match) {
+      return res.json(
+        createResponse(
+          true,
+          ACTIONS_CHAT_NOTIFICATION,
+          errors.invalidPasswordError[lang],
+          null,
+          AUTH_CONTROLLER_CODE,
+        ),
+      );
+    }
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        createResponse(
+          false,
+          ACTIONS_CHAT_ALERT_NOTIFICATION,
+          errors.internalServerError[lang],
+          `${errors.internalServerError.log_es} ${error}`,
+          AUTH_CONTROLLER_CODE,
+        ),
+      );
   }
 
   //generar el token
@@ -149,6 +165,7 @@ export const verifySessionToken = async (req, res) => {
   const { name, lastName, isOwner, phone, role, email, token } =
     sessionTokenResp.data;
 
+  console.log({ token, bodyToken });
   if (!token || token !== bodyToken) {
     return res
       .status(401)
