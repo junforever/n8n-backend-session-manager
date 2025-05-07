@@ -28,6 +28,7 @@ redisClient.on('error', (error) =>
     await redisClient.connect();
     console.log('Conexión exitosa a Redis');
   } catch (error) {
+    console.log('Error al conectar a Redis', error);
     logger.error({ time: timestamp, message: errors.redisError.log_es, error });
     process.exit(1);
   }
