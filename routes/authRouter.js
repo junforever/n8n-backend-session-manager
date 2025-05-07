@@ -4,6 +4,7 @@ import {
   verifySessionToken,
   logout,
   validateRequest,
+  blockUser,
 } from '../controllers/authController.js';
 import {
   validateRequestBodyGenerateJwt,
@@ -20,4 +21,4 @@ authRouter.post(
 );
 authRouter.post('/logout', validateRequestBodyVerifyJwt, logout);
 authRouter.get('/validate', validateRequest);
-authRouter.post('/block-user', validateRequest);
+authRouter.post('/block-user', blockUser);
