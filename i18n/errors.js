@@ -83,6 +83,12 @@ export const errors = {
     log_es: 'Error en la validación del cuerpo de la solicitud.',
     log_en: 'Error in request body validation.',
   },
+  bodyRequiredError: {
+    es: 'Error de validación del servidor. Por favor intente más tarde',
+    en: 'Server validation error. Please try again later.',
+    log_es: 'El body no se está enviando.',
+    log_en: 'The body is not being sent.',
+  },
   uniqueIdRequiredError: {
     es: 'Error de validación del servidor. Por favor intente más tarde',
     en: 'Server validation error. Please try again later.',

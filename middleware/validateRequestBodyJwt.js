@@ -15,17 +15,33 @@ const requestSchema = z.object({
   token: z.string({ required_error: 'tokenRequiredError' }),
 });
 
+const zodValidation = (validation, lang) => {
+  const resp = {
+    success: validation.success,
+    errors: [],
+  };
+
+  if (!validation.success) {
+    const zodErrors = validation.error.errors.map((err) => {
+      if (!errors[err.message]) {
+        return errors.bodyRequiredError[`log_${lang}`];
+      }
+      return errors[err.message][lang];
+    });
+    resp.errors = zodErrors;
+  }
+
+  return resp;
+};
+
 export const validateRequestBodyGenerateJwt = (req, res, next) => {
   const { lang, body } = req;
   const partialSchema = requestSchema.pick({
     password: true,
   });
-  const validation = partialSchema.safeParse(body);
+  const validation = zodValidation(partialSchema.safeParse(body), lang);
 
   if (!validation.success) {
-    const zodErrors = validation.error.errors.map(
-      (err) => errors[err.message][lang],
-    );
     return res
       .status(400)
       .json(
@@ -33,7 +49,9 @@ export const validateRequestBodyGenerateJwt = (req, res, next) => {
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
           errors.bodyValidationError[lang],
-          `${errors.bodyValidationError.log_es} : ${zodErrors.join(' ')}`,
+          `${
+            errors.bodyValidationError[`log_${lang}`]
+          } : ${validation.errors.join(' ')}`,
           VALIDATE_REQUEST_BODY_CODE,
         ),
       );
@@ -47,13 +65,10 @@ export const validateRequestBodyVerifyJwt = async (req, res, next) => {
   const partialSchema = requestSchema.pick({
     token: true,
   });
-  const validation = partialSchema.safeParse(body);
+  const validation = zodValidation(partialSchema.safeParse(body), lang);
 
   //verificar que el body tenga el token
   if (!validation.success) {
-    const zodErrors = validation.error.errors.map(
-      (err) => errors[err.message][lang],
-    );
     return res
       .status(400)
       .json(
@@ -61,7 +76,9 @@ export const validateRequestBodyVerifyJwt = async (req, res, next) => {
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
           errors.bodyValidationError[lang],
-          `${errors.bodyValidationError.log_es} : ${zodErrors.join(' ')}`,
+          `${errors.bodyValidationError.log_es} : ${validation.errors.join(
+            ' ',
+          )}`,
           VALIDATE_REQUEST_BODY_CODE,
         ),
       );
