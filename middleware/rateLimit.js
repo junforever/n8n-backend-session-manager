@@ -35,9 +35,10 @@ export const limiter = rateLimit({
           createResponse(
             false,
             ACTIONS_CHAT_ALERT_NOTIFICATION,
+            RATE_LIMIT_CODE,
+            null,
             errors.redisOperationError[lang],
             errors.redisOperationError.log_es.replace('<operation>', 'set'),
-            RATE_LIMIT_CODE,
           ),
         );
     }
@@ -48,9 +49,10 @@ export const limiter = rateLimit({
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
+          RATE_LIMIT_CODE,
+          null,
           errors.rateLimitError[lang],
           errors.rateLimitError.log_es,
-          RATE_LIMIT_CODE,
         ),
       );
   },

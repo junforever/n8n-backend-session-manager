@@ -48,11 +48,12 @@ export const validateRequestBodyGenerateJwt = (req, res, next) => {
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
+          VALIDATE_REQUEST_BODY_CODE,
+          null,
           errors.bodyValidationError[lang],
           `${
             errors.bodyValidationError[`log_${lang}`]
           } : ${validation.errors.join(' ')}`,
-          VALIDATE_REQUEST_BODY_CODE,
         ),
       );
   }
@@ -75,11 +76,12 @@ export const validateRequestBodyVerifyJwt = async (req, res, next) => {
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
+          VALIDATE_REQUEST_BODY_CODE,
+          null,
           errors.bodyValidationError[lang],
           `${errors.bodyValidationError.log_es} : ${validation.errors.join(
             ' ',
           )}`,
-          VALIDATE_REQUEST_BODY_CODE,
         ),
       );
   }
@@ -99,12 +101,13 @@ export const validateRequestBodyVerifyJwt = async (req, res, next) => {
           createResponse(
             false,
             ACTIONS_CHAT_ALERT_NOTIFICATION,
+            VALIDATE_REQUEST_BODY_CODE,
+            null,
             errors.redisOperationError[lang],
             errors.redisOperationError.log_es.replace(
               '<operation>',
               'get revoked',
             ),
-            VALIDATE_REQUEST_BODY_CODE,
           ),
         );
     }
@@ -117,9 +120,10 @@ export const validateRequestBodyVerifyJwt = async (req, res, next) => {
           createResponse(
             false,
             ACTIONS_CHAT_NOTIFICATION,
+            VALIDATE_REQUEST_BODY_CODE,
+            null,
             errors.tokenRevokedError[lang],
             errors.tokenRevokedError.log_es,
-            VALIDATE_REQUEST_BODY_CODE,
           ),
         );
     }
@@ -141,9 +145,10 @@ export const validateRequestBodyVerifyJwt = async (req, res, next) => {
         createResponse(
           false,
           ACTIONS_CHAT_NOTIFICATION,
+          VALIDATE_REQUEST_BODY_CODE,
+          null,
           errors.invalidSessionTokenError[lang],
           `${errors.invalidSessionTokenError.log_es} (${errorType})`,
-          VALIDATE_REQUEST_BODY_CODE,
         ),
       );
   }

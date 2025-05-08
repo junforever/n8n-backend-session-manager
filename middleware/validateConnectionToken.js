@@ -15,9 +15,10 @@ export const validateConnectionToken = (req, res, next) => {
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
+          VALIDATE_CONNECTION_TOKEN_CODE,
+          null,
           errors.invalidSecurityTokenError.es,
           errors.invalidSecurityTokenError.log_es,
-          VALIDATE_CONNECTION_TOKEN_CODE,
         ),
       );
   }

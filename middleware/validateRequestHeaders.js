@@ -17,9 +17,10 @@ export const validateRequestHeaders = (req, res, next) => {
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
+          VALIDATE_REQUEST_HEADERS_CODE,
+          null,
           errors.invalidHeadersError.es,
           errors.invalidHeadersError.log_es,
-          VALIDATE_REQUEST_HEADERS_CODE,
         ),
       );
   }

@@ -15,9 +15,10 @@ export const jsonErrorHandler = (err, req, res, _next) => {
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
+          JSON_ERROR_HANDLER_CODE,
+          null,
           errors.jsonError[lang],
           errors.jsonError.log_es,
-          JSON_ERROR_HANDLER_CODE,
         ),
       );
   }
@@ -29,9 +30,10 @@ export const jsonErrorHandler = (err, req, res, _next) => {
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
+          JSON_ERROR_HANDLER_CODE,
+          null,
           errors.bodySizeError[lang],
           errors.bodySizeError.log_es,
-          JSON_ERROR_HANDLER_CODE,
         ),
       );
   }
@@ -42,9 +44,10 @@ export const jsonErrorHandler = (err, req, res, _next) => {
       createResponse(
         false,
         ACTIONS_CHAT_ALERT_NOTIFICATION,
+        JSON_ERROR_HANDLER_CODE,
+        null,
         errors.internalServerError[lang],
         errors.internalServerError.log_es,
-        JSON_ERROR_HANDLER_CODE,
       ),
     );
 };

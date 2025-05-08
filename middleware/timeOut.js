@@ -14,9 +14,10 @@ export const requestTimeOut = (req, res, next) => {
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
+          TIME_OUT_CODE,
+          null,
           errors.timeoutError[lang],
           errors.timeoutError.log_es,
-          TIME_OUT_CODE,
         ),
       );
   }

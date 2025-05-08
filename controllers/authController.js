@@ -60,12 +60,13 @@ export const login = async (req, res) => {
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
+          AUTH_CONTROLLER_CODE,
+          null,
           errors.redisOperationError[lang],
           errors.redisOperationError.log_es.replace(
             '<operation>',
             'get login data',
           ),
-          AUTH_CONTROLLER_CODE,
         ),
       );
   }
@@ -79,9 +80,9 @@ export const login = async (req, res) => {
         createResponse(
           true,
           ACTIONS_CHAT_NOTIFICATION,
-          errors.invalidPasswordError[lang],
-          null,
           AUTH_CONTROLLER_CODE,
+          null,
+          errors.invalidPasswordError[lang],
         ),
       );
     }
@@ -92,9 +93,10 @@ export const login = async (req, res) => {
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
+          AUTH_CONTROLLER_CODE,
+          null,
           errors.internalServerError[lang],
           `${errors.internalServerError.log_es} ${error}`,
-          AUTH_CONTROLLER_CODE,
         ),
       );
   }
@@ -112,19 +114,18 @@ export const login = async (req, res) => {
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
+          AUTH_CONTROLLER_CODE,
+          null,
           errors.redisOperationError[lang],
           errors.redisOperationError.log_es.replace(
             '<operation>',
             'hset login token',
           ),
-          AUTH_CONTROLLER_CODE,
         ),
       );
   }
 
-  res.json(
-    createResponse(true, ACTIONS_CONTINUE, token, null, AUTH_CONTROLLER_CODE),
-  );
+  res.json(createResponse(true, ACTIONS_CONTINUE, AUTH_CONTROLLER_CODE, token));
 };
 
 /**
@@ -151,12 +152,13 @@ export const verifySessionToken = async (req, res) => {
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
+          AUTH_CONTROLLER_CODE,
+          null,
           errors.redisOperationError[lang],
           errors.redisOperationError.log_es.replace(
             '<operation>',
             'get session',
           ),
-          AUTH_CONTROLLER_CODE,
         ),
       );
   }
@@ -170,15 +172,14 @@ export const verifySessionToken = async (req, res) => {
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
+          AUTH_CONTROLLER_CODE,
+          null,
           errors.expiredTokenError[lang],
           errors.expiredTokenError.log_es,
-          AUTH_CONTROLLER_CODE,
         ),
       );
   }
-  res.json(
-    createResponse(true, ACTIONS_CONTINUE, true, null, AUTH_CONTROLLER_CODE),
-  );
+  res.json(createResponse(true, ACTIONS_CONTINUE, AUTH_CONTROLLER_CODE, true));
 };
 
 /**
@@ -206,12 +207,13 @@ export const logout = async (req, res) => {
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
+          AUTH_CONTROLLER_CODE,
+          null,
           errors.redisOperationError[lang],
           errors.redisOperationError.log_es.replace(
             '<operation>',
             'set revoked',
           ),
-          AUTH_CONTROLLER_CODE,
         ),
       );
   }
@@ -226,18 +228,19 @@ export const logout = async (req, res) => {
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
+          AUTH_CONTROLLER_CODE,
+          null,
           errors.redisOperationError[lang],
           errors.redisOperationError.log_es.replace(
             '<operation>',
             'del session',
           ),
-          AUTH_CONTROLLER_CODE,
         ),
       );
   }
 
   return res.json(
-    createResponse(true, ACTIONS_CONTINUE, null, null, AUTH_CONTROLLER_CODE),
+    createResponse(true, ACTIONS_CONTINUE, AUTH_CONTROLLER_CODE, true),
   );
 };
 
@@ -264,9 +267,10 @@ export const validateRequest = async (req, res) => {
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
+          AUTH_CONTROLLER_CODE,
+          null,
           errors.redisOperationError[lang],
           errors.redisOperationError.log_es.replace('<operation>', 'get login'),
-          AUTH_CONTROLLER_CODE,
         ),
       );
   }
@@ -274,7 +278,7 @@ export const validateRequest = async (req, res) => {
   //es un cliente
   if (!loginResp.data) {
     return res.json(
-      createResponse(true, ACTIONS_CONTINUE, null, null, AUTH_CONTROLLER_CODE),
+      createResponse(true, ACTIONS_CONTINUE, AUTH_CONTROLLER_CODE, true),
     );
   }
 
@@ -286,9 +290,9 @@ export const validateRequest = async (req, res) => {
       createResponse(
         true,
         ACTIONS_CHAT_NOTIFICATION,
-        errors.userInactiveError[lang],
-        null,
         AUTH_CONTROLLER_CODE,
+        null,
+        errors.userInactiveError[lang],
       ),
     );
   }
@@ -302,25 +306,28 @@ export const validateRequest = async (req, res) => {
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
+          AUTH_CONTROLLER_CODE,
+          null,
           errors.redisOperationError[lang],
           errors.redisOperationError.log_es.replace(
             '<operation>',
             'get active session',
           ),
-          AUTH_CONTROLLER_CODE,
         ),
       );
   }
 
   //retorno el token de la sesion, si el token es null significa que es un usuario pero no tiene sesion activa
   return res.json(
-    createResponse(
-      true,
-      ACTIONS_CONTINUE,
-      { token: sessionResp.data, name, lastName, isOwner, phone, role, email },
-      null,
-      AUTH_CONTROLLER_CODE,
-    ),
+    createResponse(true, ACTIONS_CONTINUE, AUTH_CONTROLLER_CODE, {
+      token: sessionResp.data,
+      name,
+      lastName,
+      isOwner,
+      phone,
+      role,
+      email,
+    }),
   );
 };
 
@@ -344,17 +351,18 @@ export const blockUser = async (req, res) => {
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
+          AUTH_CONTROLLER_CODE,
+          null,
           errors.redisOperationError[lang],
           errors.redisOperationError.log_es.replace(
             '<operation>',
             'set block user',
           ),
-          AUTH_CONTROLLER_CODE,
         ),
       );
   }
 
   return res.json(
-    createResponse(true, ACTIONS_CONTINUE, null, null, AUTH_CONTROLLER_CODE),
+    createResponse(true, ACTIONS_CONTINUE, AUTH_CONTROLLER_CODE, true),
   );
 };

@@ -19,9 +19,10 @@ export const validateBlockedConnections = async (req, res, next) => {
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
+          VALIDATE_BLOCKED_CONNECTIONS_CODE,
+          null,
           errors.redisOperationError[lang],
           errors.redisOperationError.log_es.replace('<operation>', 'get'),
-          VALIDATE_BLOCKED_CONNECTIONS_CODE,
         ),
       );
   }
@@ -32,9 +33,9 @@ export const validateBlockedConnections = async (req, res, next) => {
         createResponse(
           true,
           ACTIONS_CHAT_NOTIFICATION,
-          errors.rateLimitError[lang],
-          null,
           VALIDATE_BLOCKED_CONNECTIONS_CODE,
+          null,
+          errors.rateLimitError[lang],
         ),
       );
   }

@@ -13,9 +13,10 @@ export const invalidRoute = (req, res) => {
       createResponse(
         false,
         ACTIONS_CHAT_ALERT_NOTIFICATION,
+        INVALID_ROUTE_CODE,
+        null,
         errors.invalidRouteError[lang],
         errors.invalidRouteError.log_es,
-        INVALID_ROUTE_CODE,
       ),
     );
 };

@@ -6,12 +6,6 @@ import {
 
 export const sanitizeRequest = (req, res) => {
   res.json(
-    createResponse(
-      true,
-      ACTIONS_CONTINUE,
-      req.body,
-      null,
-      SANITIZE_CONTROLLER_CODE,
-    ),
+    createResponse(true, ACTIONS_CONTINUE, SANITIZE_CONTROLLER_CODE, req.body),
   );
 };

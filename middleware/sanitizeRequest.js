@@ -47,9 +47,10 @@ export const sanitizeRequest = (req, res, next) => {
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
+          SANITIZE_REQUEST_CODE,
+          null,
           errors.sanitizeError[lang],
           errors.sanitizeError.log_es,
-          SANITIZE_REQUEST_CODE,
         ),
       );
   }

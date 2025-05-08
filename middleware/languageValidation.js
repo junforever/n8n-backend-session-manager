@@ -17,9 +17,10 @@ export const languageValidation = (req, res, next) => {
         createResponse(
           false,
           ACTIONS_CHAT_ALERT_NOTIFICATION,
-          errors.languageError.es,
-          errors.languageError.log_es,
           LANGUAGE_VALIDATION_CODE,
+          null,
+          errors.languageError[lang],
+          errors.languageError.log_es,
         ),
       );
   }

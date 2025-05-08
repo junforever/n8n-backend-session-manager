@@ -9,9 +9,8 @@ export const root = (req, res) => {
     createResponse(
       true,
       ACTIONS_DO_NOTHING,
-      'Welcome to n8n backend api management',
-      null,
       ROOT_CONTROLLER_CODE,
+      'Welcome to n8n backend api management',
     ),
   );
 };
