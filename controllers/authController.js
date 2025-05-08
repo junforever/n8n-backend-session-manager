@@ -142,7 +142,7 @@ export const verifySessionToken = async (req, res) => {
   //En este punto el token ENVIADO EN EL BODY ya fue previamente validado por validateRequestBodyVerifyJwt
   //se validó que exista en el body, que sea un token jwt válido y que no este revocado
   //Por lo tanto solo se verifica que el token exista en redis en el hash del login
-  const sessionTokenResp = await redisHGetAll(loginKey);
+  const sessionTokenResp = await redisHGet(loginKey, 'token');
 
   if (!sessionTokenResp.success) {
     return res
@@ -161,8 +161,7 @@ export const verifySessionToken = async (req, res) => {
       );
   }
 
-  const { name, lastName, isOwner, phone, role, email, token } =
-    sessionTokenResp.data;
+  const token = sessionTokenResp.data;
 
   if (!token || token !== bodyToken) {
     return res
@@ -178,13 +177,7 @@ export const verifySessionToken = async (req, res) => {
       );
   }
   res.json(
-    createResponse(
-      true,
-      ACTIONS_CONTINUE,
-      { name, lastName, isOwner, phone, role, email, token },
-      null,
-      AUTH_CONTROLLER_CODE,
-    ),
+    createResponse(true, ACTIONS_CONTINUE, true, null, AUTH_CONTROLLER_CODE),
   );
 };
 
@@ -262,7 +255,7 @@ export const validateRequest = async (req, res) => {
   const { loginKey } = redisKeysGenerator(clientId, uniqueId);
 
   //validar si es un usuario registrado
-  const loginResp = await redisHGet(loginKey, 'isActive');
+  const loginResp = await redisHGetAll(loginKey);
 
   if (!loginResp.success) {
     return res
@@ -286,7 +279,8 @@ export const validateRequest = async (req, res) => {
   }
 
   //verificar que el usuario este activo
-  const isActive = loginResp.data;
+  const { name, lastName, isOwner, phone, role, email, isActive } =
+    loginResp.data;
   if (!parseInt(isActive)) {
     return res.json(
       createResponse(
@@ -323,7 +317,7 @@ export const validateRequest = async (req, res) => {
     createResponse(
       true,
       ACTIONS_CONTINUE,
-      { token: sessionResp.data },
+      { token: sessionResp.data, name, lastName, isOwner, phone, role, email },
       null,
       AUTH_CONTROLLER_CODE,
     ),
