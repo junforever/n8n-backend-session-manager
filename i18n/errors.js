@@ -167,4 +167,12 @@ export const errors = {
     log_es: 'Intento de acceso con contraseña incorrecta.',
     log_en: 'Invalid password access attempt.',
   },
+  loginAttemptsError: {
+    es: 'El usuario bloqueado por ingresar demasiadas veces una contraséna incorrecta. Por favor intente ingresar de nuevo más tarde.',
+    en: 'The user has been blocked for trying to log in too many times with an incorrect password. Please try again later.',
+    log_es:
+      'Usuario bloqueado por ingresar demasiadas veces una contraséna incorrecta.',
+    log_en:
+      'User blocked for trying to log in too many times with an incorrect password.',
+  },
 };

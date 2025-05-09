@@ -5,6 +5,7 @@ import {
   logout,
   validateRequest,
   blockUser,
+  loginMaxAttempts,
 } from '../controllers/authController.js';
 import {
   validateRequestBodyGenerateJwt,
@@ -14,6 +15,7 @@ import {
 export const authRouter = express.Router();
 
 authRouter.post('/login', validateRequestBodyGenerateJwt, login);
+authRouter.post('/login-ma', validateRequestBodyGenerateJwt, loginMaxAttempts);
 authRouter.post(
   '/verify-token',
   validateRequestBodyVerifyJwt,

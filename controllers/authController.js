@@ -6,6 +6,8 @@ import {
   ACTIONS_CONTINUE,
   AUTH_CONTROLLER_CODE,
   ACTIONS_CHAT_NOTIFICATION,
+  ACTIONS_INVALID_PASSWORD_NOTIFICATION,
+  ACTIONS_BLOCKED_USER_NOTIFICATION,
   JWT_SECRET,
 } from '../constants/constants.js';
 import { errors } from '../i18n/errors.js';
@@ -15,10 +17,12 @@ import {
   redisHDel,
   redisHGetAll,
   redisHSet,
+  redisHIncr,
 } from './redisController.js';
 import { redisKeysGenerator } from '../utils/redisKeysGenerator.js';
 
 const tokenField = 'token';
+const attemptsField = 'attempts';
 
 /**
  * Genera un token de autenticación para el usuario que se loguea.
@@ -38,6 +42,162 @@ const generateToken = (uniqueId, ttl) => {
   return jwt.sign(payload, JWT_SECRET);
 };
 
+const loginManager = async (
+  loginKey,
+  passwordBody,
+  uniqueId,
+  lang,
+  loginAttempts = false,
+) => {
+  const ttl = parseInt(process.env.JWT_EXPIRATION_MINUTES);
+  const resp = {
+    code: 200,
+    data: null,
+  };
+  //obtener informacion del usuario registrado
+  const passwordResp = await redisHGet(loginKey, 'password');
+  if (!passwordResp.success) {
+    resp.code = 500;
+    resp.data = createResponse(
+      false,
+      ACTIONS_CHAT_ALERT_NOTIFICATION,
+      AUTH_CONTROLLER_CODE,
+      null,
+      errors.redisOperationError[lang],
+      errors.redisOperationError.log_es.replace(
+        '<operation>',
+        'get login data',
+      ),
+    );
+    return resp;
+  }
+
+  const password = passwordResp.data;
+  try {
+    const match = await argon2.verify(password, passwordBody);
+    //verificar si la contraseña es correcta
+    if (!match) {
+      if (loginAttempts) {
+        const attemptsResp = await redisHIncr(
+          loginKey,
+          attemptsField,
+          parseInt(process.env.LOGIN_ATTEMPTS_EXPIRATION_MINUTES) || 60,
+        );
+        if (!attemptsResp.success) {
+          resp.code = 500;
+          resp.data = createResponse(
+            false,
+            ACTIONS_CHAT_ALERT_NOTIFICATION,
+            AUTH_CONTROLLER_CODE,
+            null,
+            errors.redisOperationError[lang],
+            errors.redisOperationError.log_es.replace(
+              '<operation>',
+              'hincrby login attempts',
+            ),
+          );
+          return resp;
+        }
+
+        const attempts = attemptsResp.data;
+
+        //si el usuario ha intentado iniciar sesión 5 veces con contraséna incorrecta
+        if (attempts >= parseInt(process.env.LOGIN_ATTEMPTS || 5)) {
+          resp.code = 401;
+          resp.data = createResponse(
+            false,
+            ACTIONS_BLOCKED_USER_NOTIFICATION,
+            AUTH_CONTROLLER_CODE,
+            null,
+            errors.loginAttemptsError[lang],
+          );
+          return resp;
+        }
+        resp.code = 401;
+        resp.data = createResponse(
+          false,
+          ACTIONS_INVALID_PASSWORD_NOTIFICATION,
+          AUTH_CONTROLLER_CODE,
+          attempts,
+          errors.invalidPasswordError[lang],
+        );
+        return resp;
+      }
+      resp.code = 401;
+      resp.data = createResponse(
+        false,
+        ACTIONS_INVALID_PASSWORD_NOTIFICATION,
+        AUTH_CONTROLLER_CODE,
+        null,
+        errors.invalidPasswordError[lang],
+      );
+      return resp;
+    }
+  } catch (error) {
+    resp.code = 500;
+    resp.data = createResponse(
+      false,
+      ACTIONS_CHAT_ALERT_NOTIFICATION,
+      AUTH_CONTROLLER_CODE,
+      null,
+      errors.internalServerError[lang],
+      `${errors.internalServerError.log_es} ${error}`,
+    );
+    return resp;
+  }
+
+  if (loginAttempts) {
+    // Eliminar los intentos si se ingresó correctamente
+    const attempsDelResp = await redisHDel(loginKey, attemptsField);
+
+    if (!attempsDelResp.success) {
+      resp.code = 500;
+      resp.data = createResponse(
+        false,
+        ACTIONS_CHAT_ALERT_NOTIFICATION,
+        AUTH_CONTROLLER_CODE,
+        null,
+        errors.redisOperationError[lang],
+        errors.redisOperationError.log_es.replace(
+          '<operation>',
+          'del attempts',
+        ),
+      );
+      return resp;
+    }
+  }
+
+  //generar el token
+  const token = generateToken(uniqueId, ttl);
+
+  //crear el registro de inicio de sesión en la clave login del usuario
+  const setTokenField = await redisHSet(loginKey, tokenField, token, ttl);
+
+  if (!setTokenField.success) {
+    resp.code = 500;
+    resp.data = createResponse(
+      false,
+      ACTIONS_CHAT_ALERT_NOTIFICATION,
+      AUTH_CONTROLLER_CODE,
+      null,
+      errors.redisOperationError[lang],
+      errors.redisOperationError.log_es.replace(
+        '<operation>',
+        'hset login token',
+      ),
+    );
+    return resp;
+  }
+
+  resp.data = createResponse(
+    true,
+    ACTIONS_CONTINUE,
+    AUTH_CONTROLLER_CODE,
+    token,
+  );
+  return resp;
+};
+
 /**
  * Inicia sesión de un usuario registrado.
  *
@@ -49,83 +209,35 @@ export const login = async (req, res) => {
   const { lang, uniqueId, clientId } = req;
   const { password: passwordBody } = req.body;
   const { loginKey } = redisKeysGenerator(clientId, uniqueId);
-  const ttl = parseInt(process.env.JWT_EXPIRATION_MINUTES);
 
-  //obtener informacion del usuario registrado
-  const passwordResp = await redisHGet(loginKey, 'password');
-  if (!passwordResp.success) {
-    return res
-      .status(500)
-      .json(
-        createResponse(
-          false,
-          ACTIONS_CHAT_ALERT_NOTIFICATION,
-          AUTH_CONTROLLER_CODE,
-          null,
-          errors.redisOperationError[lang],
-          errors.redisOperationError.log_es.replace(
-            '<operation>',
-            'get login data',
-          ),
-        ),
-      );
-  }
+  const loginResp = await loginManager(loginKey, passwordBody, uniqueId, lang);
 
-  const password = passwordResp.data;
-  try {
-    const match = await argon2.verify(password, passwordBody);
-    //verificar si la contraseña es correcta
-    if (!match) {
-      return res.json(
-        createResponse(
-          true,
-          ACTIONS_CHAT_NOTIFICATION,
-          AUTH_CONTROLLER_CODE,
-          null,
-          errors.invalidPasswordError[lang],
-        ),
-      );
-    }
-  } catch (error) {
-    return res
-      .status(500)
-      .json(
-        createResponse(
-          false,
-          ACTIONS_CHAT_ALERT_NOTIFICATION,
-          AUTH_CONTROLLER_CODE,
-          null,
-          errors.internalServerError[lang],
-          `${errors.internalServerError.log_es} ${error}`,
-        ),
-      );
-  }
+  return res.status(loginResp.code).json(loginResp.data);
+};
 
-  //generar el token
-  const token = generateToken(uniqueId, ttl);
+/**
+ * Inicia sesión de un usuario registrado.
+ * Verifica además si el usuario ha intentado iniciar sesión 5 veces con contraseñ́a incorrecta.
+ *
+ * @param {Object} req - Objeto de solicitud HTTP.
+ * @param {Object} res - Objeto de respuesta HTTP.
+ * @returns {Object} - Objeto de respuesta con el token de autenticación.
+ */
 
-  //crear el registro de inicio de sesión en la clave login del usuario
-  const setTokenField = await redisHSet(loginKey, tokenField, token, ttl);
+export const loginMaxAttempts = async (req, res) => {
+  const { lang, uniqueId, clientId } = req;
+  const { password: passwordBody } = req.body;
+  const { loginKey } = redisKeysGenerator(clientId, uniqueId);
 
-  if (!setTokenField.success) {
-    return res
-      .status(500)
-      .json(
-        createResponse(
-          false,
-          ACTIONS_CHAT_ALERT_NOTIFICATION,
-          AUTH_CONTROLLER_CODE,
-          null,
-          errors.redisOperationError[lang],
-          errors.redisOperationError.log_es.replace(
-            '<operation>',
-            'hset login token',
-          ),
-        ),
-      );
-  }
+  const loginResp = await loginManager(
+    loginKey,
+    passwordBody,
+    uniqueId,
+    lang,
+    true,
+  );
 
-  res.json(createResponse(true, ACTIONS_CONTINUE, AUTH_CONTROLLER_CODE, token));
+  return res.status(loginResp.code).json(loginResp.data);
 };
 
 /**
@@ -342,7 +454,11 @@ export const blockUser = async (req, res) => {
   const { blockUserKey } = redisKeysGenerator(clientId, uniqueId);
 
   //bloquear el usuario
-  const blockResp = await redisSet(blockUserKey, 'block', 'true');
+  const blockResp = await redisSet(
+    blockUserKey,
+    'true',
+    parseInt(process.env.BLOCK_EXPIRATION_MINUTES) || 60,
+  );
 
   if (!blockResp.success) {
     return res

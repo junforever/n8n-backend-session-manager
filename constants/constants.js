@@ -6,6 +6,10 @@ export const ACTIONS_CONTINUE = 'continue';
 export const ACTIONS_CHAT_ALERT_NOTIFICATION = 'chat_alert_notification';
 export const ACTIONS_ALERT_NOTIFICATION = 'alert_notification';
 export const ACTIONS_CHAT_NOTIFICATION = 'send_error_chat_message';
+export const ACTIONS_INVALID_PASSWORD_NOTIFICATION =
+  'send_wrong_password_chat_message';
+export const ACTIONS_BLOCKED_USER_NOTIFICATION =
+  'send_blocked_user_chat_message';
 
 //codigos de archivos para facilitar la identificacion del origen de una respuesta/error
 

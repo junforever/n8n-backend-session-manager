@@ -90,3 +90,28 @@ export const redisHDel = async (key, field) => {
     return { success: false, data: error.message };
   }
 };
+
+export const redisHIncr = async (key, field, ttl = null) => {
+  try {
+    const attempts = await redisClient.sendCommand([
+      'HINCRBY',
+      key,
+      field,
+      '1',
+    ]);
+    if (ttl && !isNaN(ttl) && ttl > 0 && attempts === 1) {
+      await redisClient.sendCommand([
+        'HEXPIRE',
+        key,
+        (ttl * 60).toString(),
+        'NX',
+        'FIELDS',
+        '1',
+        field,
+      ]);
+    }
+    return { success: true, data: attempts };
+  } catch (error) {
+    return { success: false, data: error.message };
+  }
+};

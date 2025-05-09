@@ -28,10 +28,10 @@ export const validateBlockedConnections = async (req, res, next) => {
   }
   if (data) {
     return res
-      .status(200)
+      .status(423)
       .json(
         createResponse(
-          true,
+          false,
           ACTIONS_CHAT_NOTIFICATION,
           VALIDATE_BLOCKED_CONNECTIONS_CODE,
           null,

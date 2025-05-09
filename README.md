@@ -87,6 +87,8 @@ Represents the action to be taken in n8n flow according to the response of the b
 - ACTIONS_CHAT_ALERT_NOTIFICATION: Send an error message in chat as well as an alert notification to the manager about an error in backend.
 - ACTIONS_ALERT_NOTIFICATION: Send an alert notification to the manager about an error in backend.
 - ACTIONS_CHAT_NOTIFICATION: Send an error message in chat, this error is not related to backend.
+- ACTIONS_INVALID_PASSWORD_NOTIFICATION: This action is used to notify the user that the password is invalid.
+- ACTIONS_BLOCKED_USER_NOTIFICATION: This action is used to notify the user that he is blocked.
 
 --
 
@@ -114,6 +116,7 @@ This section provides a brief overview of all the available API routes in this a
 ### Auth Routes (`/auth`)
 
 - `POST /auth/login`: Authenticates a user and returns a session token.
+- `POST /auth/login-ma`: Authenticates a user and returns a session token, also increments the login attempts counter for validation purposes.
 - `POST /auth/verify-token`: Verifies an existing session token.
 - `POST /auth/logout`: Invalidates a user's session token.
 - `GET /auth/validate`: Validates the current request's session (implementation specific).
@@ -152,15 +155,17 @@ This section provides a brief overview of all the available API routes in this a
     cp .env.example .env
     ```
 2.  Edit the `.env` file and fill in the necessary configuration values:
-    - **JWT Secret:** Secret key used for signing JWT tokens.
     - **PORT:** Port on which the application will run.
-    - **SESSION_SECRET:** A security token required for authenticating requests. Define this token in the `.env` file. Each incoming request must include this token in the `Authorization` header as a Bearer token (e.g., `Authorization: Bearer <your_token>`) to be processed. This ensures that only authorized clients or processes can interact with the backend.
+    - **JWT Secret:** Secret key used for signing JWT tokens.
     - **JWT_EXPIRATION_MINUTES:** JWT expiration time in minutes (e.g., `15` for 15 minutes).
     - **REQUEST_TIMEOUT:** Maximum time allowed for a request to complete before timing out (e.g., `15s`).
     - **REQUEST_MAX_BODY_SIZE:** Maximum allowed size for the request body (e.g., `10kb`, `1mb`, `10mb`).
     - **RATE_LIMIT_WINDOW_MS:** Time window in seconds for rate limiting (e.g., `60` for 1 minute).
     - **RATE_LIMIT_MAX:** Maximum number of requests allowed per IP address within the defined time window.
     - **BLOCK_EXPIRATION_MINUTES:** Time window in minutes for blocking a user (e.g., `60` for 1 hour).
+    - **LOGIN_ATTEMPTS:** Maximum number of login attempts allowed per user within the defined time window.
+    - **LOGIN_ATTEMPTS_EXPIRATION_MINUTES:** Time window in minutes for login attempts (e.g., `60` for 1 hour).
+    - **SESSION_SECRET:** A security token required for authenticating requests. Define this token in the `.env` file. Each incoming request must include this token in the `Authorization` header as a Bearer token (e.g., `Authorization: Bearer <your_token>`) to be processed. This ensures that only authorized clients or processes can interact with the backend.
     - **REDIS_USERNAME:** Redis username.
     - **REDIS_PASSWORD:** Redis password.
     - **REDIS_HOST:** Redis host.
