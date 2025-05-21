@@ -101,9 +101,9 @@ const loginManager = async (
 
         const attempts = attemptsResp.data;
 
-        //si el usuario ha intentado iniciar sesión 5 veces con contraséna incorrecta
+        //si el usuario ha intentado iniciar sesión 5 veces con contraseña incorrecta
         if (attempts >= parseInt(process.env.LOGIN_ATTEMPTS || 5)) {
-          resp.code = 401;
+          resp.code = 423;
           resp.data = createResponse(
             false,
             ACTIONS_BLOCKED_USER_NOTIFICATION,
