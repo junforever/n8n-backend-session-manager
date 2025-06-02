@@ -1,0 +1,169 @@
+# Next.js con Redux Toolkit y RTK Query - Mejores Prácticas y Seguridad
+
+## 1. Introducción y Principios Clave
+
+Estas reglas están diseñadas para guiar la implementación segura y eficiente de Redux Toolkit (RTK) y RTK Query en aplicaciones Next.js. El objetivo es aprovechar las capacidades de Next.js (SSR, SSG, ISR) junto con la robusta gestión de estado y fetching de datos de RTK, minimizando vulnerabilidades y código conflictivo.
+
+- **Fuente Única de Verdad (SSOT):** RTK Query debe ser la SSOT para los datos del servidor cacheados. Evitar duplicar este estado en slices manuales a menos que sea para transformaciones complejas o estado de UI derivado.
+- **Seguridad Primero:** La principal preocupación en SSR/SSG es la fuga de datos sensibles al cliente a través del estado serializado.
+- **Rendimiento:** Optimizar la serialización, la hidratación y las actualizaciones de componentes.
+- **TypeScript:** Utilizar TypeScript en todo el store de Redux (estado, acciones, reducers, slices, APIs de RTK Query) para máxima seguridad de tipos y mantenibilidad.
+
+## 2. Configuración del Store y `next-redux-wrapper`
+
+- **`configureStore` (RTK):**
+    - **MANDATORIO:** Utilizar `configureStore` para la creación del store. Incluye middleware útil por defecto (thunk, inmutabilidad, chequeo de serialización).
+    - **MANDATORIO:** Integrar el middleware de RTK Query (`api.middleware`) en el store.
+- **`next-redux-wrapper` (Opcional pero Recomendado para SSR/SSG Complejo):**
+    - Para escenarios de SSR/SSG con Redux, `next-redux-wrapper` puede simplificar la creación e inyección del store por petición en el servidor y la hidratación en el cliente.
+    - Ejemplo de `makeStore` con `next-redux-wrapper`:
+      ```typescript
+      // store.ts
+      import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit';
+      import { createWrapper } from 'next-redux-wrapper';
+      import { apiSlice } from './apiSlice'; // Tu API de RTK Query
+
+      export const makeStore = () =>
+        configureStore({
+          reducer: {
+            [apiSlice.reducerPath]: apiSlice.reducer,
+            // ...otros reducers
+          },
+          middleware: (getDefaultMiddleware) =>
+            getDefaultMiddleware().concat(apiSlice.middleware),
+        });
+
+      export type AppStore = ReturnType<typeof makeStore>;
+      export type AppState = ReturnType<AppStore['getState']>;
+      export type AppThunk<ReturnType = void> = ThunkAction<
+        ReturnType,
+        AppState,
+        unknown,
+        Action<string>
+      >;
+
+      export const wrapper = createWrapper<AppStore>(makeStore, { debug: process.env.NODE_ENV === 'development' });
+      ```
+    - En `_app.tsx`, envolver el componente con `wrapper.withRedux(MyApp)`.
+- **Alternativa sin `next-redux-wrapper` (para RTK Query Puro en SSR):**
+    - Es posible manejar la creación del store manualmente en `getServerSideProps` o `getStaticProps` para RTK Query, despachando acciones para pre-cargar datos y pasando el estado inicial como prop. Esto puede ser más simple si solo se usa RTK Query para datos del servidor y no hay otro estado Redux complejo que necesite SSR.
+
+## 3. Server-Side Rendering (SSR) y Static Site Generation (SSG) con RTK Query
+
+- **Pre-carga de Datos (Fetching Server-Side):**
+    - **MANDATORIO:** Utilizar los mecanismos de RTK Query para pre-cargar datos en el servidor dentro de `getServerSideProps` o `getStaticProps`.
+    - Ejemplo en `getServerSideProps` (con `next-redux-wrapper`):
+      ```typescript
+      // pages/posts.tsx
+      export const getServerSideProps = wrapper.getServerSideProps(
+        (store) => async (context) => {
+          // Iniciar la carga de datos
+          store.dispatch(apiSlice.endpoints.getPosts.initiate());
+
+          // Esperar a que todas las promesas de RTK Query se resuelvan
+          await Promise.all(store.dispatch(apiSlice.util.getRunningOperationPromises()));
+          // O usar: await Promise.all(apiSlice.util.getRunningQueriesThunk());
+
+          return {
+            props: {}, // El estado se serializa automáticamente por next-redux-wrapper
+          };
+        }
+      );
+      ```
+    - Si no se usa `next-redux-wrapper`, se debe extraer el estado del store (`store.getState()`) y pasarlo como prop para la hidratación manual.
+- **Hidratación en el Cliente:**
+    - **CRÍTICO:** El estado inicial del store en el cliente DEBE coincidir con el estado utilizado para renderizar en el servidor para evitar "hydration mismatches".
+    - `next-redux-wrapper` maneja la hidratación automáticamente a través de la acción `HYDRATE`. Asegúrate de que tus reducers (especialmente los manuales) manejen correctamente esta acción si es necesario, aunque RTK Query lo hace internamente.
+      ```typescript
+      // En un custom slice, si es necesario manejar HYDRATE para estado no-RTKQuery
+      // import { HYDRATE } from 'next-redux-wrapper';
+      // createSlice({
+      //   name: 'mySlice',
+      //   initialState,
+      //   reducers: { /* ... */ },
+      //   extraReducers: {
+      //     [HYDRATE]: (state, action) => {
+      //       // CUIDADO: action.payload contiene el estado completo del servidor.
+      //       // Decide qué partes de tu slice deben ser sobrescritas.
+      //       return {
+      //         ...state,
+      //         ...action.payload.mySlice, // Ejemplo
+      //       };
+      //     },
+      //   },
+      // });
+      ```
+    - Para RTK Query, la hidratación del caché es gestionada internamente cuando el estado inicial se proporciona al store.
+
+## 4. Seguridad del Estado Serializado
+
+- **PREVENCIÓN DE FUGA DE DATOS SENSIBLES (MANDATORIO):**
+    - **NUNCA** almacenes datos sensibles (secretos, tokens de sesión de larga duración, información personal identificable no destinada al cliente) en el store de Redux si este va a ser serializado y enviado al cliente.
+    - El estado completo (o una parte significativa) se envía como JSON al cliente en el HTML inicial o como parte de los props de la página. Esto es visible para cualquiera que inspeccione el código fuente de la página.
+    - **REGLA:** Antes de añadir cualquier dato al store, evalúa si es seguro que ese dato sea visible públicamente en el lado del cliente.
+- **Filtrado Selectivo (Si es Inevitable):**
+    - Si ciertos datos son necesarios en el servidor pero no deben llegar al cliente, considera:
+        1. No ponerlos en el store de Redux en absoluto.
+        2. Si están en el store temporalmente en el servidor, asegúrate de que no se serialicen o se eliminen/transformen antes de enviar el estado al cliente. Esto puede ser complejo y propenso a errores; la mejor opción es no incluirlos.
+        3. Utilizar slices separados para datos del servidor que no se hidratan en el cliente (requiere configuración cuidadosa del reducer `HYDRATE`).
+- **Estado Solo del Servidor:**
+    - Para datos que solo deben existir en el servidor, no los incluyas en el estado que se pasa al cliente para la hidratación. RTK Query puede tener datos en caché en el servidor que no necesariamente se envían todos al cliente si no son parte del renderizado inicial.
+
+## 5. RTK Query: Prácticas Específicas en Next.js
+
+- **Definición de APIs (`createApi`):**
+    - Define tus APIs de RTK Query de forma modular.
+    - Utiliza `fetchBaseQuery` o una alternativa personalizada para la comunicación con tu backend.
+    - **TIP:** Para endpoints que sirven datos para SSR/SSG, asegúrate de que puedan ser cacheados apropiadamente.
+- **`refetchOnMountOrArgChange`, `refetchOnFocus`, `refetchOnReconnect`:**
+    - Considera el comportamiento de estas opciones en el contexto de Next.js.
+    - Para datos pre-cargados en SSR/SSG, podrías querer deshabilitar el refetch inmediato al montar en el cliente si los datos no cambian frecuentemente (`refetchOnMountOrArgChange: false` o un tiempo en segundos).
+    - Evalúa el impacto en la frescura de los datos vs. el rendimiento.
+- **Invalidación de Caché y Mutaciones:**
+    - Utiliza `providesTags` y `invalidatesTags` para la gestión automática del caché tras las mutaciones.
+    - En Next.js, si navegas a una página diferente y vuelves, RTK Query puede servir datos cacheados. Asegura que las estrategias de invalidación sean robustas.
+- **Conditional Fetching:**
+    - Utiliza `skipToken` de `@reduxjs/toolkit/query/react` (o la lógica de `skip` en `useQueryState`) para evitar fetches innecesarios si las condiciones no se cumplen (ej. falta un ID de usuario).
+- **Interacción con el Router de Next.js:**
+    - Puedes despachar acciones de RTK Query (ej. para invalidar caché o pre-cargar datos) en respuesta a eventos de navegación de Next.js si es necesario, usando `useEffect` y el router de Next.js.
+
+## 6. Organización del Código y Estructura
+
+- **Modularidad:**
+    - Organiza los slices de Redux y las definiciones de API de RTK Query en archivos separados y cohesivos (ej. `features/user/userSlice.ts`, `features/posts/postsApi.ts`).
+- **Selectores:**
+    - **MANDATORIO:** Utilizar selectores (creados con `createSelector` de `reselect`, que RTK Query usa internamente para sus hooks) para desacoplar los componentes de la estructura del estado y para optimizaciones de rendimiento (memoización).
+    - Los hooks generados por RTK Query (`useGetPostsQuery`, etc.) ya devuelven datos memoizados.
+- **TypeScript:**
+    - Define tipos para tu estado, acciones, payloads, y respuestas de API.
+    - Utiliza los tipos generados por RTK Query o define los tuyos propios para los endpoints.
+
+## 7. Rendimiento
+
+- **Memoización:** Además de los selectores, usa `React.memo` para componentes funcionales que podrían re-renderizarse innecesariamente.
+- **`useSelector` Best Practices:**
+    - Selecciona solo los datos mínimos que el componente necesita.
+    - Pasa selectores primitivos si es posible, o usa `shallowEqual` como segundo argumento de `useSelector` si devuelves un nuevo objeto/array en cada render.
+- **Tamaño del Estado Serializado:**
+    - Un estado Redux muy grande puede incrementar el tamaño del payload HTML inicial y el tiempo de parseo/hidratación. Mantén el estado lo más magro posible, especialmente la parte que se envía al cliente. RTK Query ayuda aquí gestionando su propio caché de forma optimizada.
+- **Code Splitting para Reducers/Slices (Avanzado):**
+    - Para aplicaciones muy grandes, considera el code splitting de reducers usando `store.replaceReducer` si no todos los slices son necesarios en todas las páginas. Esto es menos común con la estructura modular de RTK Query.
+
+## 8. Anti-Patrones y Qué Evitar
+
+- **PROHIBIDO:** Almacenar secretos o datos sensibles del servidor en el estado Redux que se envía al cliente.
+- **EVITAR:** Duplicar estado entre RTK Query y slices manuales sin una razón clara. Deja que RTK Query maneje el caché de datos del servidor.
+- **NO IGNORAR ERRORES DE HIDRATACIÓN:** Investiga y soluciona cualquier "hydration mismatch" error. Indican una discrepancia entre el render del servidor y el cliente.
+- **EVITAR LÓGICA COMPLEJA EN REDUCERS:** Los reducers deben ser funciones puras y simples. La lógica de negocio compleja o asíncrona debe ir en thunks, listeners de RTK, o en el backend.
+- **NO ABUSAR DE `useEffect` PARA SINCRONIZAR ESTADO:** Prefiere derivar estado usando selectores o utilizar las herramientas de RTK Query para gestionar dependencias de datos.
+- **NO OLVIDAR EL MANEJO DE ESTADOS DE CARGA Y ERROR:** Los hooks de RTK Query proveen `isLoading`, `isFetching`, `isError`, `error`. Úsalos para proveer feedback adecuado en la UI.
+
+## 9. Pruebas
+
+- **Slices y Reducers:** Prueba los reducers con diferentes acciones y payloads para asegurar que el estado se actualiza correctamente.
+- **RTK Query Endpoints:**
+    - Puedes probar los endpoints de RTK Query mockeando `fetch` o usando `msw` (Mock Service Worker) para interceptar las peticiones HTTP.
+    - Prueba los estados de carga, éxito y error.
+- **Componentes Conectados:** Utiliza React Testing Library y mockea el store de Redux o provee un store real con estado inicial para probar componentes conectados.
+
+Estas reglas deben proporcionar una base sólida para trabajar con Redux Toolkit y RTK Query en proyectos Next.js de manera segura y eficiente.
