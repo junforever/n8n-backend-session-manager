@@ -1,0 +1,13 @@
+- TypeScript: Seguridad y Mejores Prácticas
+- Aproveche el Sistema de Tipos: Utilice el sistema de tipos estáticos de TypeScript para detectar errores en tiempo de compilación y mejorar la robustez del código.
+- Opciones Estrictas del Compilador: Habilite opciones estrictas del compilador como `strict: true` (que incluye `strictNullChecks`, `noImplicitAny`, `noImplicitThis`, etc.) en su `tsconfig.json`.
+- Evite `any` Explícitamente: Minimice el uso de `any`. Prefiera tipos más específicos o `unknown` para entradas de datos cuyo tipo no se conoce de antemano, forzando una verificación de tipo antes de su uso.
+- Validación en Tiempo de Ejecución: Recuerde que los tipos de TypeScript son para tiempo de compilación. Valide SIEMPRE los datos provenientes de fuentes externas (APIs, formularios de usuario) en tiempo de ejecución, ya que no hay garantías sobre su estructura o tipo. Use bibliotecas de validación (como Zod, Yup, class-validator) o validación manual.
+- Tipos de Aserción Seguros: Use aserciones de tipo (`as Type`) con precaución y solo cuando esté seguro de que el tipo es correcto. Las aserciones incorrectas pueden llevar a errores en tiempo de ejecución.
+- Interfaces vs. Tipos: Use `interface` para definir la forma de los objetos o cuando necesite declaración merging. Use `type` para alias, uniones, intersecciones y tipos más complejos.
+- Genéricos: Utilice genéricos para crear componentes y funciones reutilizables y con seguridad de tipos.
+- Modificadores de Acceso: Use `public`, `private`, y `protected` en las clases para encapsular la lógica y controlar la visibilidad.
+- Enums: Use enums para conjuntos de constantes nombradas, prefiriéndolos sobre constantes mágicas de string o número. Considere `const enum` para optimización si no necesita el objeto enum en tiempo de ejecución.
+- Módulos: Organice su código en módulos para una mejor separación de responsabilidades y mantenibilidad.
+- Decoradores: Úselos con precaución y comprenda su impacto en el código generado, especialmente en el contexto de frameworks.
+- No Confíe en `this` Implícito: Use funciones de flecha para métodos de clase que serán pasados como callbacks o asegúrese de hacer `bind` correctamente para mantener el contexto de `this`. La opción `noImplicitThis` ayuda.

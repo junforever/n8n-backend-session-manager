@@ -1,0 +1,15 @@
+- React: Seguridad de APIs y Estado
+- Autenticación: Implemente mecanismos de autenticación robustos. No almacene tokens de sesión o API keys sensibles en `localStorage` debido a su susceptibilidad a XSS. Prefiera cookies `HttpOnly` (manejadas por el backend) o almacenamiento en memoria de la aplicación con medidas de seguridad adecuadas.
+- Autorización: Verifique los permisos del usuario en el lado del servidor antes de realizar operaciones sensibles o devolver datos. No confíe únicamente en la lógica de UI para ocultar o mostrar funcionalidades.
+- No exponga secretos o API keys en el código del lado del cliente. Utilice variables de entorno con prefijo (ej. `REACT_APP_` en Create React App, `NEXT_PUBLIC_` en Next.js) solo para claves públicas. Las claves secretas deben usarse solo en el backend.
+- Manejo de Estado: Evite serializar datos sensibles (ej. detalles completos del usuario, permisos) directamente en el estado global de la aplicación si este puede ser fácilmente inspeccionado o si partes de él se persisten sin encriptación.
+- Dependencias: Audite regularmente las dependencias de su proyecto (`npm audit`) para identificar y mitigar vulnerabilidades en paquetes de terceros.
+- Comunicación con APIs: Siempre use HTTPS para las llamadas a API para proteger los datos en tránsito.
+- Validación de Entradas: Aunque la validación principal debe estar en el backend, realice validaciones en el frontend para mejorar la UX y como una primera capa de defensa.
+- Gestión de Estado Global y Cache de API (MANDATORIO):
+- Para la gestión del estado global de la aplicación o si se requiere cache para datos provenientes de una API, SIEMPRE utilice Redux con Redux Toolkit y RTK Query.
+- NO utilice otras librerías o herramientas para la gestión de estado global (ej. Context API para estados complejos y compartidos globalmente que requieran optimizaciones de rendimiento o middlewares) o para el cacheo de datos de API (ej. SWR, React Query) cuando Redux Toolkit y RTK Query sean aplicables y cumplan los requisitos del proyecto.
+- Redux Toolkit (`configureStore`, `createSlice`) debe usarse para la configuración del store y la creación de reducers/actions.
+- RTK Query (`createApi`, hooks autogenerados) debe usarse para el fetching, caching, e invalidación de datos de API.
+- Siga las mejores prácticas para Redux Toolkit y RTK Query definidas en sus respectivos archivos de reglas.
+- El estado local del componente (`useState`, `useReducer`) sigue siendo apropiado para datos no compartidos o específicos de un componente.

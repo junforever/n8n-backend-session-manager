@@ -1,0 +1,137 @@
+- Supabase + Express.js + Stripe: Backend Híbrido para Pagos Seguros
+
+- 1. Principios Generales y Arquitectura:
+  - Objetivo: Construir un sistema de pagos robusto y seguro utilizando Express.js como el backend principal que orquesta las interacciones entre el cliente, Supabase (para gestión de usuarios y datos de aplicación) y Stripe (para el procesamiento de pagos).
+  - Seguridad como Prioridad Máxima: Todas las decisiones de diseño deben priorizar la seguridad de los datos de pago y el cumplimiento de PCI DSS.
+  - Flujo de Datos Claro:
+    - Cliente (Frontend): Interactúa con Supabase para autenticación y datos generales. Para pagos, se comunica con el backend Express. Utiliza Stripe.js (con la clave publicable) para tokenizar información sensible de tarjetas (Stripe Elements) o para redirigir a Stripe Checkout.
+    - Express.js (Backend):
+      - Maneja la lógica de negocio relacionada con pagos.
+      - Se comunica con la API de Stripe usando la clave secreta para crear/gestionar pagos, clientes, suscripciones, etc.
+      - Expone endpoints seguros para el frontend (ej. crear PaymentIntent, crear Checkout Session).
+      - Aloja el endpoint para webhooks de Stripe, verificando firmas y actualizando Supabase.
+      - Interactúa con Supabase (usando la service_role key o el JWT del usuario si es apropiado y seguro) para leer/escribir datos relacionados con usuarios, perfiles, pedidos, y estados de suscripción.
+    - Supabase:
+      - Provee autenticación de usuarios y gestión de perfiles.
+      - Almacena datos de la aplicación, incluyendo el mapeo entre usuarios de Supabase y Customer IDs de Stripe, y el estado de los pagos/suscripciones.
+      - Las políticas RLS deben seguir protegiendo los datos en Supabase.
+    - Stripe:
+      - Procesa los pagos, gestiona la información sensible de tarjetas (nunca la almacenes tú).
+      - Gestiona clientes de Stripe, suscripciones, facturas.
+      - Envía eventos a través de webhooks al backend Express.
+
+- 2. Delimitación de Responsabilidades:
+  - Cliente (Frontend con Stripe.js):
+    - Recopilar información de pago de forma segura usando Stripe Elements (PCI SAQ A).
+    - O redirigir a Stripe Checkout (PCI SAQ A).
+    - Manejar la presentación del estado del pago al usuario.
+    - Autenticarse con Supabase y enviar el JWT de Supabase a Express para operaciones autenticadas.
+  - Express.js (Backend Principal para Pagos):
+    - **TODA la lógica de servidor de Stripe reside aquí.**
+    - Crear y gestionar PaymentIntents, Checkout Sessions, Customers, Subscriptions, etc., usando la API de Stripe con la clave secreta.
+    - Validar y procesar solicitudes de pago del frontend.
+    - Alojar y procesar webhooks de Stripe (verificación de firma OBLIGATORIA).
+    - Sincronizar el estado de los pagos/suscripciones con la base de datos de Supabase.
+    - Implementar lógica de autorización para asegurar que los usuarios solo puedan gestionar sus propios pagos/suscripciones.
+    - Manejar errores de la API de Stripe y comunicar estados apropiados al cliente.
+  - Supabase:
+    - Autenticación y gestión de usuarios (`auth.users`).
+    - Almacenamiento de datos de la aplicación, incluyendo:
+      - Tabla de perfiles/usuarios que enlace `auth.users.id` con `stripe_customer_id`.
+      - Tablas para pedidos, productos (si no se gestionan solo en Stripe), suscripciones (estado, plan, fechas).
+    - NO debe interactuar directamente con la API de Stripe para operaciones de pago sensibles que requieran la clave secreta. Las Supabase Edge Functions podrían usarse para webhooks si se prefiere a Express, pero la lógica de verificación de firma y el acceso seguro a secretos son igualmente cruciales. Para este stack, centralizar en Express es más claro.
+  - Stripe:
+    - Bóveda segura para datos de tarjetas.
+    - Procesamiento de pagos.
+    - Gestión de suscripciones y facturación recurrente.
+    - Envío de eventos de webhook.
+
+- 3. Flujo de Pagos Recomendado (Ejemplos):
+  - A. Usando Stripe Checkout (Recomendado para simplicidad y cumplimiento PCI):
+    1. Frontend: Usuario inicia el proceso de pago.
+    2. Frontend: Solicita al backend Express la creación de una sesión de Stripe Checkout, enviando el JWT de Supabase.
+    3. Express:
+       - Verifica el JWT del usuario de Supabase.
+       - Obtiene/crea el `stripe_customer_id` para el usuario de Supabase.
+       - Llama a `stripe.checkout.sessions.create()` con los detalles del pedido, `customer` (ID de Stripe), `success_url`, `cancel_url`.
+       - Devuelve el `sessionId` de Checkout al frontend.
+    4. Frontend: Usa `stripe.redirectToCheckout({ sessionId })`.
+    5. Stripe: Usuario completa el pago en la página de Stripe. Stripe redirige al `success_url` o `cancel_url`.
+    6. Express (Webhook): Recibe el evento `checkout.session.completed` de Stripe.
+       - Verifica la firma del webhook.
+       - Recupera los detalles de la sesión si es necesario.
+       - Actualiza la base de datos de Supabase (ej. marca el pedido como pagado, activa la suscripción).
+  - B. Usando PaymentIntents con Stripe Elements (Mayor control sobre la UI):
+    1. Frontend: Usuario introduce los datos de la tarjeta en Stripe Elements.
+    2. Frontend: Solicita al backend Express la creación de un PaymentIntent, enviando el JWT de Supabase y, opcionalmente, un `payment_method_id` si ya se ha creado.
+    3. Express:
+       - Verifica el JWT del usuario de Supabase.
+       - Obtiene/crea el `stripe_customer_id`.
+       - Llama a `stripe.paymentIntents.create()` con el monto, moneda, `customer` (ID de Stripe), y opcionalmente `payment_method` y `confirm: true` (si se quiere confirmar inmediatamente) o sin confirmar para que el cliente lo haga.
+       - Devuelve el `client_secret` del PaymentIntent (y el `status` si ya está confirmado) al frontend.
+    4. Frontend: Si el PaymentIntent requiere acción del cliente (ej. 3D Secure) o no fue confirmado en backend:
+       - Usa `stripe.confirmCardPayment(client_secret, { payment_method: ... })`.
+    5. Stripe: Procesa el pago.
+    6. Express (Webhook): Recibe eventos como `payment_intent.succeeded`, `payment_intent.payment_failed`, `payment_intent.requires_action`.
+       - Verifica la firma del webhook.
+       - Actualiza la base de datos de Supabase.
+
+- 4. Gestión de Clientes (Usuarios de Supabase y Customers de Stripe):
+  - Al registrar un nuevo usuario en Supabase (vía `auth.users`), se debe crear un Customer en Stripe.
+  - Almacenar el `stripe_customer_id` devuelto por Stripe en una tabla de Supabase (ej. `profiles` o `stripe_customers`) vinculada al `user_id` de Supabase.
+  - Esto se puede hacer mediante:
+    - Una Supabase Function que se dispare con `auth.hook.onSignUp` (cuidado con el manejo de errores y reintentos).
+    - Un endpoint en Express que el frontend llama después de un registro exitoso en Supabase. Express crea el Customer en Stripe y actualiza el perfil del usuario en Supabase. (Más control).
+  - Utiliza el `stripe_customer_id` al crear PaymentIntents o Checkout Sessions para asociar los pagos al cliente correcto en Stripe.
+
+- 5. Webhooks de Stripe (Endpoint en Express):
+  - Endpoint OBLIGATORIO: `POST /stripe-webhooks` (o similar) en Express.
+  - Verificación de Firma OBLIGATORIA: Usar `stripe.webhooks.constructEvent(request.rawBody, sig, endpointSecret)` para verificar la firma (`request.headers['stripe-signature']`) con el secreto de firma del webhook. `request.rawBody` es crucial, no el cuerpo parseado.
+  - Idempotencia: Diseñar los manejadores de eventos para que sean idempotentes (ej. verificar si la acción ya se realizó antes de volver a ejecutarla).
+  - Respuesta Rápida: Responder a Stripe con un `200 OK` lo antes posible. Procesar la lógica de negocio de forma asíncrona si es compleja o larga.
+  - Eventos Clave a Manejar:
+    - `checkout.session.completed`: Para Stripe Checkout.
+    - `payment_intent.succeeded`: Para pagos exitosos.
+    - `payment_intent.payment_failed`: Para pagos fallidos.
+    - `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`: Para gestionar el ciclo de vida de las suscripciones.
+    - `invoice.paid`, `invoice.payment_failed`: Para facturas de suscripciones.
+  - Actualizar Supabase: Dentro del manejador de webhooks, actualizar las tablas correspondientes en Supabase para reflejar el estado del pago/suscripción. Usar la `service_role key` para estas operaciones de backend en Supabase.
+
+- 6. Seguridad (CRÍTICO):
+  - Claves API de Stripe:
+    - Clave Publicable (`pk_...`): Segura para usar en el frontend con Stripe.js.
+    - Clave Secreta (`sk_...`): NUNCA exponerla en el frontend. Solo usarla en el backend Express. Almacenarla de forma segura como variable de entorno.
+    - Secreto de Firma de Webhook (`whsec_...`): Solo usarla en el backend Express para verificar las firmas de los webhooks. Almacenarla de forma segura como variable de entorno.
+  - Claves de Supabase:
+    - `SUPABASE_URL` y `SUPABASE_ANON_KEY`: Pueden usarse en el frontend para autenticación y acceso a datos según RLS.
+    - `SUPABASE_SERVICE_ROLE_KEY`: NUNCA exponerla en el frontend. Solo usarla en el backend Express para operaciones privilegiadas en Supabase (ej. actualizar tablas desde webhooks). Almacenarla de forma segura como variable de entorno.
+  - HTTPS: OBLIGATORIO para todas las comunicaciones (cliente <-> Express, Express <-> Stripe, cliente <-> Supabase).
+  - Validación de Entradas en Express: Validar todos los datos provenientes del cliente (montos, IDs de productos, etc.) antes de usarlos en llamadas a la API de Stripe.
+  - Autorización en Express:
+    - Verificar el JWT de Supabase para identificar al usuario en las solicitudes del frontend.
+    - Asegurar que un usuario solo pueda acceder/gestionar sus propios datos de pago y suscripciones.
+  - PCI DSS:
+    - Usar Stripe Elements o Stripe Checkout para que los datos sensibles de la tarjeta nunca toquen tu servidor Express, simplificando el cumplimiento (SAQ A).
+    - NO almacenar NUNCA números de tarjeta completos, CVCs, etc.
+  - Protección CSRF y XSS: Aplicar las protecciones estándar de Express (ej. `helmet`, `csurf` si se usan sesiones basadas en cookies, aunque para APIs JWT-based CSRF es menos problemático si se siguen las buenas prácticas).
+  - Limitar Exposición de Errores: No devolver mensajes de error detallados de Stripe o Supabase directamente al cliente si pueden revelar información sensible.
+  - Idempotency Keys en Stripe: Para operaciones críticas que el cliente podría reintentar (ej. crear un cargo), usar `Idempotency-Key` en las solicitudes a la API de Stripe desde Express para evitar duplicados.
+
+- 7. Mejores Prácticas Adicionales:
+  - Manejo de Errores Robusto: Implementar un buen manejo de errores en Express para las llamadas a Stripe y Supabase.
+  - Logging: Registrar eventos importantes y errores en Express para depuración y auditoría.
+  - Pruebas:
+    - Probar los flujos de pago con las tarjetas de prueba de Stripe.
+    - Probar los manejadores de webhooks usando la CLI de Stripe para simular eventos.
+  - Variables de Entorno: TODAS las claves y secretos deben ser gestionados mediante variables de entorno.
+  - Sincronización de Datos: Mantener los datos de clientes y suscripciones sincronizados entre Stripe (fuente de verdad para pagos) y Supabase (para la lógica de la aplicación). Los webhooks son clave para esto.
+  - Gestión de Metadatos: Usar el campo `metadata` en los objetos de Stripe (Customers, PaymentIntents, Subscriptions) para almacenar referencias a IDs de Supabase (ej. `supabase_user_id`) si es útil para la reconciliación, pero no almacenar datos sensibles.
+
+- 8. Qué Evitar (Anti-Patrones):
+  - NUNCA enviar la clave secreta de Stripe o el secreto de firma de webhook al frontend.
+  - NUNCA enviar la `service_role key` de Supabase al frontend.
+  - NO procesar pagos o crear clientes de Stripe directamente desde el frontend usando la clave secreta (esto es una brecha de seguridad masiva).
+  - NO confiar en los datos del frontend para tomar decisiones de autorización de pago sin validación en el backend.
+  - NO omitir la verificación de la firma de los webhooks de Stripe.
+  - NO almacenar datos sensibles de tarjetas (PAN, CVC) en tu base de datos Supabase o en logs de Express.
+  - Evitar lógica de negocio compleja directamente en Supabase Functions si Express ya está manejando la orquestación principal de pagos. Mantener roles claros.

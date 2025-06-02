@@ -1,0 +1,7 @@
+- Shadcn/ui: Seguridad en Componentes UI
+- XSS (Cross-Site Scripting): Shadcn/ui utiliza React, por lo que las protecciones XSS de React aplican.
+- No pase HTML no sanitizado directamente a los componentes. Si un componente permite renderizar HTML (ej. a través de una prop similar a `dangerouslySetInnerHTML`), sanitice siempre la entrada usando DOMPurify antes de pasarla.
+- Props y Datos: Valide y sanitice cualquier dato proporcionado por el usuario que se utilice para determinar el contenido o comportamiento de los componentes Shadcn/ui.
+- Interacción con APIs: Si los componentes de Shadcn/ui interactúan con APIs (ej. un ComboBox que carga datos), asegúrese de que esas interacciones sigan las mejores prácticas de seguridad de API (autenticación, autorización, HTTPS).
+- Composición: La seguridad de Shadcn/ui depende en gran medida de cómo se componen y utilizan los componentes. Aplique las mejores prácticas de React para el manejo de estado y props.
+- Actualizaciones: Mantenga actualizados los componentes de Shadcn/ui y sus dependencias subyacentes (Radix UI, TailwindCSS, React) para beneficiarse de correcciones de seguridad.

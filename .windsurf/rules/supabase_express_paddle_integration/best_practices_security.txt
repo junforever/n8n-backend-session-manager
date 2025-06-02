@@ -1,0 +1,201 @@
+# Integración Segura de Supabase, Express.js y Paddle para Pagos
+
+## 1. Introducción y Arquitectura General
+
+Estas reglas están diseñadas para guiar la creación de proyectos backend híbridos que utilizan Supabase para la gestión de datos y autenticación, Express.js como capa de lógica de negocio y orquestación de pagos, y Paddle como la plataforma de procesamiento de pagos (Merchant of Record). El objetivo principal es garantizar pagos 100% seguros, cumplimiento normativo simplificado (Paddle se encarga de impuestos y compliance global) y una clara delimitación de responsabilidades para evitar código redundante o conflictivo.
+
+- **Paddle.js (Frontend):** Se utiliza para iniciar el proceso de checkout (Overlay Checkout o Inline Checkout). Es fundamental para la tokenización y el manejo seguro de la entrada de datos de pago por parte del usuario.
+- **Express.js (Backend):** Actúa como el orquestador principal para la lógica de pagos. Es responsable de:
+    - Servir información de productos/planes (puede obtenerla de la API de Paddle o de una caché local).
+    - Generar "Pay Links" de Paddle si es necesario.
+    - **CRÍTICO:** Recibir, verificar y procesar Webhooks (Alerts API) de Paddle para mantener la sincronización del estado de las suscripciones.
+    - Interactuar de forma segura con Supabase para actualizar los datos del usuario y el estado de su suscripción.
+    - Gestionar las claves API de Paddle y el secreto de los webhooks.
+- **Supabase (Backend):** Proporciona:
+    - Autenticación de usuarios (generalmente mediante JWT).
+    - Almacenamiento de datos específicos de la aplicación y del usuario.
+    - Almacenamiento del estado de las suscripciones, IDs de cliente/suscripción de Paddle y metadatos relevantes, vinculados a los usuarios de Supabase.
+    - Seguridad a nivel de fila (RLS) para proteger los datos de los usuarios.
+- **Paddle:**
+    - Actúa como "Merchant of Record", manejando la complejidad de impuestos globales y cumplimiento normativo.
+    - Procesa los pagos y gestiona el ciclo de vida de las suscripciones.
+    - Envía webhooks (Alerts) para notificar eventos importantes.
+    - Proporciona un dashboard para la gestión de productos, suscripciones, clientes y visualización de datos de pago.
+
+## 2. Delimitación Estricta de Responsabilidades
+
+Para evitar conflictos, redundancias y vulnerabilidades, las responsabilidades deben estar claramente definidas:
+
+- **Frontend (React, Next.js, Vue, Angular, etc., con Paddle.js):**
+    - **MANDATORIO:** Utilizar `Paddle.js` para iniciar el checkout.
+    - **MANDATORIO:** Al configurar `Paddle.Checkout.open()`, se DEBE incluir un campo `passthrough` (objeto JSON convertido a string) que contenga el `user_id` de Supabase (u otro identificador interno único del usuario en tu sistema). Ejemplo: `Paddle.Checkout.open({ product: PRODUCT_ID, email: user.email, passthrough: JSON.stringify({ userId: supabaseUser.id, internalPlanId: 'premium_monthly' }) });`. Este `passthrough` es devuelto en los webhooks y es ESENCIAL para vincular el evento de Paddle con el usuario correcto en Supabase.
+    - Manejar la interfaz de usuario y mostrar el estado de la suscripción obtenido del backend Express.
+    - **PROHIBIDO:** Nunca manejar ni almacenar la clave API secreta de Paddle (`PADDLE_API_KEY`) ni el secreto de firma de webhooks (`PADDLE_WEBHOOK_SECRET`).
+    - **PROHIBIDO:** Nunca enviar la `SUPABASE_SERVICE_ROLE_KEY` al frontend.
+
+- **Backend Express.js:**
+    - **PUNTO CENTRAL DE INTERACCIÓN CON PADDLE:** Es el único componente que debe comunicarse directamente con la API de Paddle (si es necesario más allá de los webhooks) y el único que debe recibir webhooks de Paddle.
+    - **MANDATORIO:** Implementar un endpoint dedicado para recibir webhooks (Alerts) de Paddle. Este endpoint es el núcleo para la sincronización de datos.
+    - **MANDATORIO:** Verificar la firma de CADA webhook de Paddle utilizando la cabecera `Paddle-Signature` y el secreto de webhook (`PADDLE_WEBHOOK_SECRET`). (Ver sección específica sobre Webhooks).
+    - **MANDATORIO:** Utilizar el middleware `express.raw({ type: 'application/json' })` (o equivalente) para el endpoint de webhooks para asegurar que se accede al cuerpo crudo (raw body) de la solicitud, necesario para la verificación de la firma.
+    - Procesar los payloads de los webhooks (una vez verificados) para actualizar la base de datos de Supabase (ej. tablas `subscriptions`, `user_profiles`) con el estado de la suscripción, IDs de Paddle, fechas de renovación, etc.
+    - Si se exponen endpoints API propios relacionados con pagos (ej. para obtener el estado de una suscripción o generar un paylink personalizado), estos DEBEN estar protegidos y validar el JWT de Supabase del usuario.
+    - **MANDATORIO:** Almacenar `PADDLE_API_KEY` (Vendor API Key) y `PADDLE_WEBHOOK_SECRET` como variables de entorno seguras. Nunca deben estar hardcodeadas ni expuestas.
+    - Utilizar la `SUPABASE_SERVICE_ROLE_KEY` (almacenada como variable de entorno) para interactuar con la base de datos de Supabase desde el backend Express con privilegios elevados de forma segura.
+
+- **Backend Supabase:**
+    - Gestionar la autenticación de usuarios y la emisión de JWTs.
+    - Almacenar los datos de la aplicación y perfiles de usuario.
+    - **MANDATORIO:** Mantener tablas para almacenar el estado de las suscripciones de los usuarios, incluyendo:
+        - `user_id` (FK a la tabla de usuarios de Supabase).
+        - `paddle_subscription_id` (el ID de la suscripción en Paddle).
+        - `paddle_customer_id` (el ID del cliente en Paddle, si se gestionan explícitamente).
+        - `paddle_plan_id` (el ID del plan en Paddle).
+        - `status` (ej. `active`, `trialing`, `past_due`, `paused`, `cancelled`).
+        - `current_period_ends_at` (o `next_bill_date`).
+        - `cancel_url` (proporcionada por Paddle para que el usuario gestione su suscripción).
+        - `update_url` (proporcionada por Paddle para que el usuario actualice su método de pago).
+        - Otros metadatos relevantes.
+    - Estas tablas son actualizadas EXCLUSIVAMENTE por el backend Express.js basándose en los webhooks verificados de Paddle.
+    - Implementar RLS (Row Level Security) en todas las tablas sensibles, especialmente si alguna vez se considera el acceso directo (aunque no recomendado para datos de suscripción que deben ser mediados por Express).
+
+- **Paddle:**
+    - Gestiona toda la infraestructura de pagos, facturación recurrente, impuestos y cumplimiento.
+    - Envía webhooks para todos los eventos relevantes del ciclo de vida de la suscripción y pagos.
+
+## 3. Flujo de Pago Recomendado (Paddle Checkout + Webhooks)
+
+1.  **Inicio (Frontend):**
+    a.  El usuario decide suscribirse/comprar.
+    b.  El frontend llama a `Paddle.Checkout.open()` con el `product_id` o `plan_id` y, crucialmente, el objeto `passthrough` (JSON string) conteniendo el `user_id` de Supabase y cualquier otro dato interno necesario para la reconciliación.
+2.  **Proceso de Pago (Paddle):**
+    a.  El usuario interactúa con el modal de checkout de Paddle y completa el pago.
+    b.  Paddle procesa el pago.
+3.  **Notificación (Paddle -> Express):**
+    a.  Paddle envía un webhook (ej. `subscription_created`, `subscription_payment_succeeded`) al endpoint configurado en Express.js.
+4.  **Procesamiento del Webhook (Express.js):**
+    a.  **MANDATORIO:** Verificar la firma del webhook (ver sección 5). Si la firma no es válida, descartar la solicitud y registrar un error de seguridad.
+    b.  Extraer el `user_id` del objeto `passthrough` en el payload del webhook.
+    c.  Basándose en el `alert_name` (tipo de evento del webhook), actualizar la base de datos de Supabase:
+        - Crear o actualizar el registro de suscripción del usuario.
+        - Almacenar `paddle_subscription_id`, `status`, `next_bill_date`, `cancel_url`, `update_url`, etc.
+    d.  Responder a Paddle con un `HTTP 200 OK` lo más rápido posible para acusar recibo. El procesamiento lógico puede ser diferido a una cola si es complejo, pero la respuesta debe ser rápida.
+5.  **Actualización de Estado (Frontend):**
+    a.  El frontend puede ser notificado del cambio de estado (ej. mediante Supabase Realtime si está configurado para escuchar cambios en la tabla de suscripciones) o puede re-solicitar el estado de la suscripción al backend Express.
+
+## 4. Gestión de Clientes y Sincronización de Datos
+
+- La fuente de verdad para el estado de los pagos y suscripciones es Paddle.
+- Supabase almacena una copia sincronizada de este estado para la lógica de la aplicación (ej. controlar acceso a funcionalidades premium).
+- La sincronización se realiza principalmente a través de los webhooks de Paddle procesados por Express.js.
+- Es vital almacenar los `paddle_subscription_id` y, si aplica, `paddle_customer_id` en Supabase, vinculados al `user_id` de Supabase.
+- Los `update_url` y `cancel_url` proporcionados por Paddle (a menudo en los webhooks `subscription_created` o `subscription_updated`) deben almacenarse y exponerse al usuario en la interfaz de la aplicación para la autogestión de su suscripción.
+
+## 5. Manejo Seguro de Webhooks (Alerts API) de Paddle (MANDATORIO)
+
+La verificación de la firma de los webhooks de Paddle es CRUCIAL para la seguridad. Un endpoint de webhook no seguro puede ser explotado para conceder acceso no autorizado a servicios.
+
+1.  **Configuración en Paddle:**
+    - En el dashboard de Paddle (Developer Tools > Events o similar para Notificaciones/Webhooks), configura la URL de tu endpoint Express.js.
+    - Obtén el "Secret Key" (o "Signing Secret" / `endpoint_secret_key`) para esta configuración de webhook. Este secreto es ÚNICO por endpoint de notificación.
+    - Almacena este secreto de forma segura como una variable de entorno en tu servidor Express (ej. `PADDLE_WEBHOOK_SECRET`).
+
+2.  **Implementación en Express.js:**
+    a.  **Middleware para Raw Body:** Asegúrate de que Express no parsee el cuerpo de la solicitud a JSON antes de la verificación. Usa `express.raw({ type: 'application/json' })` para la ruta del webhook.
+        ```javascript
+        // Ejemplo en Express
+        const express = require('express');
+        const app = express();
+        // Middleware para parsear JSON en otras rutas
+        app.post('/webhooks/paddle', express.raw({ type: 'application/json' }), (req, res) => {
+          // Lógica de verificación y procesamiento aquí
+        });
+        ```
+    b.  **Obtener la Firma y el Timestamp:**
+        - La firma enviada por Paddle está en la cabecera `Paddle-Signature`.
+        - El formato es `ts=UNIX_TIMESTAMP;h1=HEX_ENCODED_SIGNATURE`.
+        - Extrae el timestamp (`ts`) y la firma (`h1`).
+    c.  **Construir el Payload Firmado (`signed_payload`):**
+        - Concatena el timestamp extraído (`ts`), un carácter de dos puntos (`:`), y el cuerpo CRUDO (raw body) de la solicitud (el `Buffer` de `req.body`).
+        - `signed_payload = ts_value + ":" + raw_request_body_string`
+    d.  **Calcular tu Propia Firma:**
+        - Usa el algoritmo HMAC-SHA256.
+        - La clave para el HMAC es tu `PADDLE_WEBHOOK_SECRET`.
+        - El dato a hashear es el `signed_payload` construido en el paso anterior.
+        - El resultado debe ser una cadena hexadecimal.
+        ```javascript
+        const crypto = require('crypto');
+        const secret = process.env.PADDLE_WEBHOOK_SECRET;
+        const paddleSignatureHeader = req.headers['paddle-signature']; // ej: "ts=1671552777;h1=eb4d0dc8853be92b7f063b9f3ba5233eb920a09459b6e6b2c26705b4364db151"
+        
+        const parts = paddleSignatureHeader.split(';').reduce((acc, part) => {
+            const [key, value] = part.split('=');
+            acc[key] = value;
+            return acc;
+        }, {});
+        const timestamp = parts['ts'];
+        const paddleSignature = parts['h1'];
+
+        const rawBody = req.body; // Esto es un Buffer gracias a express.raw()
+        const signedPayload = timestamp + ":" + rawBody.toString('utf8'); // Asegúrate que la codificación sea la esperada si no es utf8
+
+        const expectedSignature = crypto.createHmac('sha256', secret)
+                                      .update(signedPayload)
+                                      .digest('hex');
+        ```
+    e.  **Comparar las Firmas:**
+        - Compara la firma calculada (`expectedSignature`) con la firma extraída de la cabecera (`paddleSignature`) usando una función de comparación segura contra ataques de temporización (timing attacks), como `crypto.timingSafeEqual` (asegúrate de que ambas sean Buffers de la misma longitud).
+        ```javascript
+        const isValid = crypto.timingSafeEqual(Buffer.from(expectedSignature), Buffer.from(paddleSignature));
+        if (!isValid) {
+          console.error("Paddle Webhook: Invalid signature.");
+          return res.status(400).send('Invalid signature');
+        }
+        ```
+    f.  **(Opcional pero Recomendado) Verificar Timestamp:**
+        - Compara el `timestamp` extraído de la cabecera con el tiempo actual del servidor para prevenir ataques de repetición (replay attacks). Rechaza webhooks que sean demasiado antiguos (ej. más de 5 minutos).
+        ```javascript
+        const fiveMinutesInSeconds = 5 * 60;
+        const currentTimestamp = Math.floor(Date.now() / 1000);
+        if (Math.abs(currentTimestamp - parseInt(timestamp, 10)) > fiveMinutesInSeconds) {
+          console.warn("Paddle Webhook: Timestamp validation failed (potential replay attack).");
+          return res.status(400).send('Timestamp validation failed');
+        }
+        ```
+    g.  **Procesar el Webhook:** Solo si la firma (y opcionalmente el timestamp) son válidos, procede a procesar el contenido del webhook.
+
+## 6. Reglas de Seguridad Esenciales Adicionales
+
+- **Gestión de Claves (MANDATORIO):**
+    - `PADDLE_API_KEY` (Vendor API Key de Paddle): Almacenar como variable de entorno en Express.js. NUNCA exponer al frontend. Usar solo para llamadas API servidor-a-servidor a Paddle si son necesarias.
+    - `PADDLE_WEBHOOK_SECRET`: Almacenar como variable de entorno en Express.js. NUNCA exponer.
+    - `SUPABASE_URL` y `SUPABASE_ANON_KEY`: Usadas por el frontend y Express (si usa el cliente Supabase como usuario anónimo o autenticado).
+    - `SUPABASE_SERVICE_ROLE_KEY`: Almacenar como variable de entorno en Express.js. NUNCA exponer al frontend. Usar para operaciones de base de datos privilegiadas desde el backend Express.
+- **HTTPS (MANDATORIO):** Todas las comunicaciones (frontend <-> Express, Express <-> Supabase, Express <-> Paddle, Usuario <-> Paddle Checkout) DEBEN ser sobre HTTPS. El endpoint de webhooks DEBE ser HTTPS.
+- **Validación de Entradas:** Aunque la firma del webhook verifica la autenticidad, valida los datos esperados del payload del webhook antes de usarlos para operaciones de base de datos.
+- **Autorización en Express:** Cualquier endpoint en Express que realice acciones sensibles (ej. iniciar un proceso de cancelación de suscripción vía API, obtener detalles de facturación) debe validar el JWT del usuario de Supabase.
+- **Manejo de Errores:** Implementar un manejo de errores robusto en Express para las interacciones con Paddle y Supabase. Registrar errores adecuadamente.
+- **Idempotencia de Webhooks:** Diseñar los manejadores de webhooks para que sean idempotentes. Paddle puede reenviar webhooks. Verifica si un evento ya ha sido procesado (ej. usando el `alert_id` o una combinación de `subscription_id`, `event_type` y `event_time` del payload).
+- **No Almacenar Datos de Pago Sensibles:** NUNCA almacenar números de tarjeta de crédito, CVCs, etc., en tu base de datos Supabase. Paddle se encarga de esto.
+
+## 7. Mejores Prácticas Adicionales
+
+- **Paddle Sandbox:** Realizar pruebas exhaustivas de toda la integración utilizando el entorno Sandbox de Paddle.
+- **Pruebas de Webhooks:**
+    - Utilizar la funcionalidad de envío de webhooks de prueba desde el dashboard de Paddle.
+    - Para desarrollo local, usar herramientas como `ngrok` para exponer tu endpoint local a internet y que Paddle pueda alcanzarlo.
+- **Actualizaciones de Paddle.js:** Mantener la librería `Paddle.js` actualizada en el frontend.
+- **Versiones de API de Paddle:** Si se realizan llamadas directas a la API de Paddle, estar atento a la gestión de versiones de su API.
+- **Logging Detallado:** Implementar logging en Express para el procesamiento de webhooks (recepción, verificación, éxito/fallo del procesamiento, errores) y cualquier llamada a la API de Paddle.
+- **Variables de Entorno:** TODAS las claves y secretos deben gestionarse mediante variables de entorno. NO hardcodear.
+- **Respuesta Rápida a Webhooks:** Responder a los webhooks de Paddle con un `200 OK` lo antes posible. Si el procesamiento es largo, considerar un sistema de colas para procesar el evento de forma asíncrona después de enviar la respuesta `200 OK`.
+
+## 8. Qué Evitar (Anti-Patrones)
+
+- **PROHIBIDO:** Exponer `PADDLE_API_KEY`, `PADDLE_WEBHOOK_SECRET`, o `SUPABASE_SERVICE_ROLE_KEY` en el código del frontend o en cualquier lugar accesible públicamente.
+- **PROHIBIDO:** Omitir la verificación de la firma de los webhooks de Paddle. Esto es una brecha de seguridad crítica.
+- **NO CONFIAR CIEGAMENTE EN EL CLIENTE:** No conceder acceso a funcionalidades premium basándose únicamente en información del frontend. Siempre verificar el estado de la suscripción a través del backend Express (que a su vez consulta Supabase, actualizado por webhooks verificados).
+- **EVITAR LLAMADAS API CRÍTICAS DESDE FRONTEND:** No realizar llamadas a la API de Paddle que modifiquen el estado de suscripciones o realicen operaciones financieras directamente desde el frontend usando la `PADDLE_API_KEY`. Estas operaciones deben ser mediadas por el backend Express.
+- **NO OLVIDAR EL `passthrough`:** No configurar u olvidar procesar el campo `passthrough` en el checkout de Paddle.js y en los webhooks es un error común que impide la correcta asociación de eventos de Paddle con usuarios de Supabase.
+- **NO MODIFICAR EL RAW BODY ANTES DE VERIFICACIÓN:** No permitir que ningún middleware (excepto `express.raw`) modifique o parsee el cuerpo de la solicitud del webhook antes de que la firma sea verificada.
+- **NO DUPLICAR LÓGICA DE PAGO:** Si Express.js es el orquestador de pagos, evitar implementar lógica de negocio compleja relacionada con pagos directamente en Funciones de Supabase que podría entrar en conflicto o ser redundante. Mantener roles claros.

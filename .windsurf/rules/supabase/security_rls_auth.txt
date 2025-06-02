@@ -1,0 +1,12 @@
+- Supabase: Row Level Security (RLS) y Autenticación
+- Habilite RLS en TODAS las tablas que contienen datos sensibles o que no deben ser públicamente accesibles por defecto. `ENABLE ROW LEVEL SECURITY`.
+- Cree políticas de RLS específicas para `SELECT`, `INSERT`, `UPDATE`, `DELETE` según sea necesario. Sea lo más restrictivo posible.
+- Las políticas deben basarse en `auth.uid()` para el usuario autenticado o en roles personalizados (`auth.role()`).
+- Ejemplo Política Select (solo el dueño puede leer): `CREATE POLICY "select_own_data" ON "your_table" FOR SELECT USING (auth.uid() = user_id_column);`
+- Ejemplo Política Insert (solo usuarios autenticados): `CREATE POLICY "insert_authenticated" ON "your_table" FOR INSERT WITH CHECK (auth.role() = 'authenticated');`
+- No otorgue permisos amplios como `public` o `anon` a menos que sea explícitamente necesario para datos públicos.
+- API Keys: La `anon_key` es segura para exponer en el frontend SI Y SOLO SI RLS está habilitado y configurado correctamente en todas las tablas relevantes.
+- La `service_role_key` NUNCA debe exponerse en el lado del cliente ni en el código del navegador. Úsela solo en entornos de servidor seguros para operaciones administrativas o bypass de RLS (con extrema precaución).
+- Autenticación Fuerte: Configure políticas de contraseñas seguras. Considere habilitar la prevención de contraseñas filtradas y CAPTCHA.
+- MFA: Implemente la autenticación multifactor (MFA) para los usuarios. Puede forzar MFA a través de RLS verificando el nivel de Assurance (aal) del usuario: `auth.jwt()->>'aal' = 'aal2'`.
+- Revocación de Tokens de Refresco: Habilite la opción para revocar tokens de refresco para mejorar la seguridad en caso de compromiso de tokens.

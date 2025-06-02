@@ -1,0 +1,18 @@
+- Express.js: Enrutamiento y Autenticación Seguros
+- Proteja las rutas que requieren autenticación con middleware que verifique la identidad del usuario (ej. tokens JWT, sesiones).
+- Implemente la autorización después de la autenticación para asegurar que el usuario autenticado tenga los permisos necesarios para acceder al recurso o realizar la acción solicitada.
+- Evite la enumeración de usuarios. Las respuestas a intentos de login fallidos deben ser genéricas y no indicar si el usuario existe o no.
+- Implemente protección contra ataques de temporización en comparaciones de contraseñas y otros secretos (use funciones de comparación de tiempo constante como `crypto.timingSafeEqual`).
+- Almacene las contraseñas de forma segura utilizando hashes fuertes y salados (ej. bcrypt, Argon2). Nunca almacene contraseñas en texto plano.
+- Gestione las sesiones de forma segura:
+  - Use identificadores de sesión largos, aleatorios e impredecibles.
+  - Regenere el ID de sesión después del login.
+  - Implemente tiempos de expiración para las sesiones (tanto inactivas como absolutas).
+  - Provea una forma segura para que los usuarios cierren sus sesiones (invalidación del lado del servidor).
+- Para JWTs:
+  - Use algoritmos de firma fuertes (ej. HS256 como mínimo, preferiblemente RS256 o ES256 si se gestionan claves asimétricas).
+  - Almacene los secretos de firma de JWT de forma segura. No los codifique en duro.
+  - Establezca tiempos de expiración cortos para los tokens de acceso (access tokens).
+  - Considere el uso de tokens de refresco (refresh tokens) para obtener nuevos tokens de acceso sin requerir credenciales nuevamente.
+  - No incluya información sensible en el payload del JWT a menos que esté encriptado.
+- Valide las URLs de redirección para prevenir ataques de redirección abierta (open redirect). Asegúrese de que las redirecciones solo vayan a dominios permitidos o rutas relativas seguras.

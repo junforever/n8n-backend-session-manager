@@ -1,0 +1,79 @@
+- Supabase y Express.js: Mejores Prácticas y Seguridad para Backend Híbrido
+
+- Principios Generales:
+  - Objetivo: Utilizar Express.js como una capa de backend personalizada que interactúa con Supabase, aprovechando Supabase para la base de datos, autenticación (primaria), y otras funcionalidades BaaS, mientras Express maneja lógica de negocio compleja, integraciones de terceros, o tareas específicas no ideales para Supabase Edge Functions.
+  - Evitar Redundancia: No duplicar funcionalidades. Si Supabase puede manejar una tarea eficientemente (ej. CRUD simple con RLS, auth básica), no la reimplemente en Express sin una razón clara (ej. necesidad de orquestación compleja, transformaciones de datos avanzadas).
+  - Claridad en Flujo de Datos: Defina claramente cómo fluyen los datos y las solicitudes entre el cliente, Express y Supabase.
+
+- Delimitación de Responsabilidades:
+  - Supabase se encarga de:
+    - Base de Datos Primaria (PostgreSQL): Almacenamiento, esquemas, y relaciones.
+    - Autenticación de Usuarios (Primaria): Gestión de usuarios, inicio de sesión, registro, JWTs. Las políticas de RLS se basan en estos JWTs.
+    - Row Level Security (RLS) y Políticas de Acceso: Definir y aplicar RLS para proteger el acceso directo a los datos.
+    - Realtime (si se usa): Suscripciones a cambios en la base de datos.
+    - Storage (si se usa): Almacenamiento de archivos.
+    - Supabase Edge Functions: Para lógica simple, cercana al usuario o a la base de datos, que puede ser invocada por el frontend o por Express.
+    - APIs Auto-generadas (PostgREST): Pueden ser consumidas por Express (usando la service_role key con precaución) o directamente por el frontend si RLS es suficiente.
+
+  - Express.js se encarga de:
+    - Lógica de Negocio Compleja: Procesos que involucran múltiples pasos, orquestación de servicios, o reglas de negocio que no se mapean fácilmente a RLS o funciones de base de datos.
+    - Endpoints de API Personalizados: Crear APIs con estructuras específicas, agregación de datos de Supabase y otras fuentes, o transformaciones de datos antes de enviarlos al cliente.
+    - Integración con Servicios de Terceros: Conectar con otras APIs o servicios externos que Supabase no soporta nativamente.
+    - Tareas Intensivas en CPU o de Larga Duración: Procesos que no son adecuados para el entorno serverless de Supabase Edge Functions.
+    - Backend For Frontend (BFF): Adaptar y preparar datos específicamente para las necesidades de diferentes clientes (web, móvil).
+    - Gestión de Middlewares Avanzada: Implementar cadenas de middlewares personalizadas para logging, monitoreo, transformación de solicitudes/respuestas.
+    - Si se requiere un control total sobre el entorno de ejecución del backend (versiones específicas de Node.js, paquetes, etc.).
+
+- Seguridad en la Integración:
+  - Gestión de Claves Supabase en Express:
+    - `SUPABASE_URL` y `SUPABASE_ANON_KEY`: Almacenar de forma segura como variables de entorno en el servidor Express.
+    - `SUPABASE_SERVICE_ROLE_KEY`: Almacenar de forma EXTREMADAMENTE SEGURA como variable de entorno en el servidor Express. NUNCA exponerla al cliente.
+      - Usar la `service_role key` en Express SOLO cuando sea absolutamente necesario para operaciones que deban eludir RLS (ej. tareas administrativas, acceso a datos que el usuario autenticado no debería tener directamente, o si Express implementa su propia lógica de autorización completa).
+  - Autenticación y Autorización:
+    - Flujo Recomendado:
+      1. El cliente (frontend) se autentica directamente con Supabase Auth (usando `supabase-js`).
+      2. El cliente recibe un JWT de Supabase.
+      3. El cliente envía este JWT a los endpoints de Express en la cabecera `Authorization: Bearer <JWT>`.
+      4. En Express, valide el JWT usando `supabase.auth.getUser(jwt)` o una librería de validación de JWT con las claves públicas de Supabase.
+      5. Si el JWT es válido, puede usar la información del usuario (`auth.uid()`, `claims`) para lógica de autorización personalizada en Express.
+      6. Al interactuar con Supabase desde Express en nombre del usuario, inicialice el cliente Supabase con el JWT del usuario para que las políticas RLS se apliquen correctamente. Puede pasar el JWT al crear el cliente Supabase en Express o usar métodos para establecer la sesión del usuario para la solicitud actual.
+         - Ejemplo: `const supabaseAuthed = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { global: { headers: { Authorization: \`Bearer ${userJwt}\` } } });`
+         - O, si se usa el cliente Supabase global, asegurarse de que el contexto de usuario se maneje por solicitud.
+    - Alternativa (con `service_role key`): Si Express opera como un sistema de backend privilegiado usando la `service_role key` para todas las interacciones con Supabase:
+      - Express DEBE implementar su propia lógica de autenticación y autorización robusta para proteger sus endpoints.
+      - RLS de Supabase será eludido por estas operaciones. Toda la responsabilidad de la seguridad de los datos recae en Express para estas rutas.
+  - Row Level Security (RLS) en Supabase:
+    - SIEMPRE tener RLS habilitado en las tablas de Supabase, incluso si Express es el principal consumidor. Esto proporciona una capa de defensa en profundidad.
+    - Diseñe políticas RLS que reflejen los permisos de acceso de los usuarios.
+    - Si Express usa el JWT del usuario para interactuar con Supabase, las políticas RLS se aplicarán automáticamente.
+    - Si Express usa la `service_role key`, RLS se omite. Asegúrese de que esto sea intencional y que Express maneje la autorización.
+  - Validación de Entradas en Express:
+    - Valide y sanitice rigurosamente TODAS las entradas en los endpoints de Express antes de procesarlas o pasarlas a Supabase. Use librerías como `express-validator` o `joi`.
+  - Seguridad Estándar de Express:
+    - Utilice Helmet para configurar cabeceras HTTP seguras.
+    - Implemente protección CSRF si Express sirve formularios web o gestiona sesiones basadas en cookies.
+    - Configure CORS adecuadamente (`cors` middleware).
+    - Manejo de errores seguro: no filtrar información sensible en los mensajes de error.
+    - Limite la tasa de solicitudes (rate limiting) para prevenir abusos.
+  - HTTPS: Asegúrese de que toda la comunicación entre el cliente, Express y Supabase sea a través de HTTPS.
+  - Dependencias: Mantenga actualizadas las dependencias de Express y Node.js (`npm audit`).
+
+- Mejores Prácticas de Desarrollo:
+  - Cliente Supabase en Express:
+    - Inicialice el cliente Supabase (`@supabase/supabase-js`) una vez y hágalo disponible en su aplicación Express (ej. a través de `app.locals` o inyección de dependencias), o cree instancias por solicitud si necesita manejar contextos de usuario (JWTs) de forma aislada.
+    - Utilice variables de entorno para las credenciales de Supabase.
+  - Manejo de Errores: Implemente un manejo de errores robusto tanto en las interacciones con Supabase como en la lógica de Express. Traduzca los errores de Supabase a respuestas de API significativas.
+  - Transacciones: Para operaciones que requieren múltiples pasos en la base de datos y deben ser atómicas, utilice transacciones de PostgreSQL. Esto puede requerir el uso de funciones de base de datos de Supabase (invocadas desde Express) o ejecutar SQL directamente si el cliente Supabase lo permite de forma transaccional.
+  - Logging: Implemente un logging detallado en Express para rastrear solicitudes, errores e interacciones importantes con Supabase.
+  - Pruebas: Escriba pruebas unitarias e de integración para sus rutas de Express, incluyendo la lógica que interactúa con Supabase (puede mockear el cliente Supabase).
+  - Estructura del Proyecto: Organice su código de Express de manera modular (ej. por rutas, controladores, servicios).
+  - No Exponer Lógica Interna de Supabase: Express debe actuar como una fachada. Los clientes de Express no deberían necesitar conocer los detalles internos de cómo Supabase está estructurado, si es posible.
+  - Optimización:
+    - Sea selectivo con los datos que solicita a Supabase (`select('column1, column2')`).
+    - Considere la paginación para grandes conjuntos de datos.
+    - Utilice los índices de base de datos de Supabase eficazmente.
+
+- Cuándo NO usar Express con Supabase (Considerar alternativas):
+  - Para CRUD simple donde RLS es suficiente: El cliente frontend puede usar `supabase-js` directamente.
+  - Para lógica simple que puede vivir en una Supabase Edge Function: Menor latencia y menos infraestructura que gestionar.
+  - Si el objetivo es simplemente tener un "servidor Node.js" sin una lógica de API compleja: Supabase Edge Functions (Node.js runtime) podrían ser suficientes.

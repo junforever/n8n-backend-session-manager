@@ -1,0 +1,33 @@
+- HTML: Seguridad, Accesibilidad (WCAG) y Mejores Prácticas
+- Seguridad - Prevención de XSS:
+  - NUNCA inserte datos no confiables o no sanitizados directamente en el HTML.
+  - Si debe mostrar datos del usuario, escápelos adecuadamente según el contexto (contenido HTML, atributos HTML, JavaScript dentro de HTML, CSS dentro de HTML).
+  - Prefiera usar `textContent` en JavaScript para insertar datos en lugar de `innerHTML`.
+- Seguridad - Content Security Policy (CSP): Implemente CSP mediante la cabecera HTTP `Content-Security-Policy` o la etiqueta `<meta http-equiv="Content-Security-Policy" content="...">` para restringir las fuentes de contenido y mitigar ataques XSS.
+- Seguridad - Enlaces Externos: Para enlaces que abren en una nueva pestaña (`target="_blank"`), use siempre `rel="noopener noreferrer"` para prevenir vulnerabilidades de tabnabbing y proteger la privacidad del referente.
+- Seguridad - Formularios:
+  - Use el método `POST` para acciones que modifican estado.
+  - Implemente protección CSRF (Cross-Site Request Forgery) si usa sesiones o cookies para autenticación.
+  - Use `autocomplete="off"` para campos sensibles si es necesario, pero considere las implicaciones de usabilidad. Use `autocomplete` con valores apropiados (ej. `current-password`, `new-password`) para mejorar la experiencia del usuario.
+- Seguridad - Iframes: Si embebe contenido de terceros no confiable, use el atributo `sandbox` en los `<iframe>` para restringir sus capacidades.
+- Seguridad - Codificación de Caracteres: Declare siempre la codificación de caracteres como UTF-8: `<meta charset="UTF-8">`.
+- Accesibilidad - HTML Semántico:
+  - Utilice elementos HTML semánticos (`<header>`, `<nav>`, `<main>`, `<article>`, `<section>`, `<aside>`, `<footer>`, `<figure>`, `<figcaption>`, etc.) para estructurar el contenido de forma significativa.
+  - Asegure una estructura de encabezados lógica y jerárquica (`<h1>` - `<h6>`). No salte niveles de encabezado.
+- Accesibilidad - Texto Alternativo para Imágenes: Provea texto alternativo descriptivo para todas las imágenes funcionales o informativas usando el atributo `alt`. Para imágenes decorativas, use `alt=""`.
+- Accesibilidad - Formularios Accesibles:
+  - Asocie explícitamente las etiquetas (`<label>`) con sus controles de formulario (`<input>`, `<select>`, `<textarea>`) usando el atributo `for` en la etiqueta y el `id` correspondiente en el control.
+  - Agrupe controles relacionados usando `<fieldset>` y `<legend>`.
+  - Provea indicaciones claras para errores de validación y campos obligatorios.
+- Accesibilidad - Navegación por Teclado:
+  - Asegúrese de que todos los elementos interactivos (enlaces, botones, controles de formulario) sean accesibles y operables mediante el teclado.
+  - Mantenga un orden de tabulación lógico y visible. Use `tabindex="0"` para hacer enfocables elementos no interactivos por defecto si es necesario, y evite `tabindex` con valores positivos.
+- Accesibilidad - Contraste de Color: Asegure un contraste suficiente entre el color del texto y el color de fondo (WCAG AA: 4.5:1 para texto normal, 3:1 para texto grande).
+- Accesibilidad - ARIA (Accessible Rich Internet Applications):
+  - Use ARIA solo cuando la semántica HTML nativa no sea suficiente.
+  - No use ARIA para contradecir la semántica nativa (ej. `role="button"` en un `<a>` que navega).
+  - Asegúrese de que los atributos ARIA se actualicen dinámicamente si el estado del componente cambia.
+- Accesibilidad - Contenido Multilingüe: Use el atributo `lang` en la etiqueta `<html>` y en elementos específicos si contienen texto en un idioma diferente.
+- Mejores Prácticas - Validación: Escriba HTML válido según los estándares del W3C. Use un validador.
+- Mejores Prácticas - Estructura del Documento: Use `<!DOCTYPE html>` y una estructura básica correcta (`<html>`, `<head>`, `<body>`).
+- Mejores Prácticas - Evitar Estilos y Scripts Inline: Minimice el uso de estilos inline (`style="..."`) y manejadores de eventos inline (`onclick="..."`). Prefiera hojas de estilo externas y scripts externos con event listeners.

@@ -1,0 +1,7 @@
+- TailwindCSS: Consideraciones de Seguridad
+- CSS Injection: TailwindCSS es un framework de CSS. El riesgo principal, aunque bajo, sería la inyección de CSS si los nombres de las clases se generan dinámicamente a partir de entradas de usuario no sanitizadas.
+- Evite generar nombres de clases de Tailwind directamente desde la entrada del usuario.
+- Si debe hacerlo (caso muy raro), asegúrese de que la entrada esté estrictamente validada y sanitizada para prevenir la inyección de CSS arbitrario o la ruptura del layout.
+- Content Security Policy (CSP): Si utiliza una CSP, asegúrese de que permita la carga de sus hojas de estilo CSS generadas por Tailwind. Si usa estilos en línea (`style` attribute) con Tailwind (poco común), su CSP debe permitir `unsafe-inline` para `style-src`, lo cual es menos seguro. Prefiera hojas de estilo externas.
+- Build Process: Asegúrese de que su proceso de build de TailwindCSS (ej. a través de PostCSS) sea seguro y no introduzca vulnerabilidades a través de plugins de terceros no confiables.
+- No hay vulnerabilidades inherentes significativas en TailwindCSS en sí mismo; las preocupaciones se centran en cómo se integra y utiliza en el contexto de una aplicación web más amplia.

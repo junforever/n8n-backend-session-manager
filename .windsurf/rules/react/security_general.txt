@@ -1,0 +1,14 @@
+- React: Seguridad General y XSS
+- Aproveche la protección XSS incorporada de React: JSX escapa automáticamente los valores embebidos en él. Evite construir HTML como strings.
+- Validación de URLs: Al renderizar enlaces (<a>) o iframes con URLs dinámicas, valide siempre la URL para asegurar que usa protocolos seguros (https, http) y no 'javascript:'.
+- `dangerouslySetInnerHTML`: Úselo con extrema precaución y solo cuando sea absolutamente necesario. Siempre sanitice el HTML antes de pasarlo a esta prop, utilizando una biblioteca robusta como DOMPurify.
+  - `import DOMPurify from 'dompurify';`
+  - `const sanitizedHtml = DOMPurify.sanitize(dirtyHtml);`
+  - `<div dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />`
+- Evite la manipulación directa del DOM (ej. usando `refs` para modificar contenido HTML directamente) si puede lograr el mismo resultado a través del estado y las props de React, ya que esto puede eludir las protecciones de React.
+- No utilice métodos inseguros de React como `createFactory` o `cloneElement` con props no controladas que puedan llevar a XSS.
+- Escapado de JSON: Al renderizar JSON en el HTML (ej. para hidratación inicial del estado), escape los caracteres `<`, `>`, `&` para prevenir XSS si el JSON proviene de fuentes no confiables o contiene HTML.
+  - Reemplace `<` con `\u003c`.
+- Mantenga React y sus dependencias (ReactDOM) actualizados a las últimas versiones estables para beneficiarse de parches de seguridad.
+- Utilice linters de seguridad (ej. ESLint con `eslint-plugin-react` y `eslint-plugin-security`) para detectar patrones inseguros.
+- Considere el uso de hooks de pre-commit para ejecutar linters y pruebas antes de confirmar el código.

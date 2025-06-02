@@ -1,0 +1,24 @@
+- Redux Core: Mejores Prácticas (Usar preferentemente con Redux Toolkit)
+- Principios Fundamentales:
+  - Única Fuente de Verdad: El estado de toda tu aplicación se almacena en un árbol de objetos dentro de una única store.
+  - Estado de Solo Lectura: La única forma de cambiar el estado es emitiendo una acción, un objeto que describe lo que sucedió.
+  - Cambios mediante Reductores Puros: Para especificar cómo el árbol de estado es transformado por las acciones, escribes reductores puros.
+- Inmutabilidad: NUNCA modifique el estado directamente. Siempre cree copias del estado y modifique las copias.
+  - En reductores, use el operador spread (`...`) para objetos y arrays, o métodos de array que devuelven un nuevo array (`map`, `filter`, `concat`, etc.).
+  - Considere el uso de librerías como Immer si la lógica de inmutabilidad se vuelve compleja (Redux Toolkit lo incluye).
+- Reductores Puros:
+  - Los reductores deben ser funciones puras: dados los mismos argumentos (estado y acción), siempre deben devolver el mismo resultado.
+  - No deben tener efectos secundarios (side effects) como llamadas a API, mutaciones fuera de su alcance, o llamar a funciones no puras.
+  - No deben modificar sus argumentos (estado y acción).
+- Acciones:
+  - Las acciones deben ser objetos planos de JavaScript con una propiedad `type` (generalmente un string).
+  - Use constantes para los tipos de acción para evitar errores tipográficos.
+  - Mantenga las acciones lo más descriptivas y mínimas posible.
+- Selectores:
+  - Use selectores para desacoplar los componentes de la forma del estado.
+  - Los selectores pueden computar datos derivados del estado.
+  - Considere el uso de selectores memoizados (ej. con `reselect`) para optimizar el rendimiento si la computación es costosa (Redux Toolkit facilita esto).
+- Efectos Secundarios (Side Effects):
+  - Maneje los efectos secundarios (como llamadas a API) fuera de los reductores, usando middleware como Redux Thunk (incluido por defecto en Redux Toolkit) o Redux Saga.
+- Normalización del Estado: Considere normalizar el estado anidado o relacional en su store, similar a una base de datos, para facilitar las actualizaciones y la lectura.
+- Estructura de Archivos: Organice sus archivos de Redux (acciones, reductores, constantes) de manera lógica, por ejemplo, por feature o por tipo de archivo (ducks pattern).

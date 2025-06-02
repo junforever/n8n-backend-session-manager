@@ -1,0 +1,23 @@
+- Stripe: Seguridad General y PCI Compliance
+- PCI DSS: Utilice integraciones de bajo riesgo como Stripe Elements, Checkout o Payment Links. Esto asegura que los datos sensibles de la tarjeta (PAN, CVC) se envíen directamente a Stripe, minimizando su carga de cumplimiento PCI.
+- NO almacene datos crudos de tarjetas (PAN, CVC). Puede almacenar de forma segura información no sensible devuelta por la API de Stripe (tipo de tarjeta, últimos cuatro dígitos, fecha de caducidad).
+- Use la tokenización de Stripe (Customer objects, PaymentMethods) para pagos recurrentes o guardados.
+- HTTPS: Todas las páginas que manejan información de pago DEBEN servirse sobre HTTPS (TLS 1.2+). Todos los recursos (JS, CSS, imágenes) en estas páginas también deben ser HTTPS.
+- API Keys:
+  - Las claves secretas (`sk_live_...`) NUNCA deben exponerse en el lado del cliente. Úselas solo en el backend. Almacénelas de forma segura (variables de entorno, gestores de secretos).
+  - Las claves publicables (`pk_live_...`) están diseñadas para el frontend (con Stripe.js) para tokenizar información.
+- Webhooks:
+  - Use HTTPS para sus endpoints de webhook.
+  - Verifique SIEMPRE las firmas de los webhooks usando su secreto de firma de webhook para asegurar que el evento proviene de Stripe y no ha sido alterado.
+  - Diseñe manejadores de webhooks idempotentes.
+  - Responda rápidamente a los webhooks (200 OK) y procese tareas complejas de forma asíncrona.
+  - No confíe ciegamente en los datos del evento para autorización; si es necesario, obtenga el objeto actualizado desde la API de Stripe.
+- Content Security Policy (CSP): Si usa CSP, incluya los dominios de Stripe necesarios:
+  - `connect-src: https://api.stripe.com https://checkout.stripe.com`
+  - `frame-src: https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com`
+  - `script-src: https://js.stripe.com https://checkout.stripe.com`
+  - `img-src: https://*.stripe.com`
+  - (Consulte siempre la documentación de Stripe para las directivas CSP más recientes).
+- Server-Side: Valide todas las entradas (montos, moneda) antes de interactuar con la API de Stripe. Implemente autenticación y autorización robustas en su backend.
+- Account Security: Habilite 2FA en su cuenta de Stripe. Use contraseñas fuertes y únicas.
+- SDKs: Mantenga actualizadas las SDKs de Stripe.

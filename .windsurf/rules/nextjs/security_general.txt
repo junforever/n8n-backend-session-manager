@@ -1,0 +1,40 @@
+- Stack Tecnológico Mandatorio para Nuevos Proyectos Next.js:
+  - Backend:
+    - **MANDATORIO:** Para nuevos proyectos Next.js, el backend principal DEBE implementarse utilizando Supabase en conjunto con Express.js.
+    - Se DEBEN seguir las reglas y mejores prácticas definidas en `.windsurf/rules/supabase_express_integration/best_practices_security.txt`.
+    - **PROHIBIDO:** El uso de API Routes nativas de Next.js (`pages/api/` o `app/api/`) como backend principal para lógica de negocio compleja o interacciones con base de datos, a menos que el USER lo especifique explícitamente para casos de uso muy simples y puntuales (ej. un webhook muy básico que no requiera la infraestructura de Express). La preferencia es centralizar el backend en Express.js.
+  - Frontend:
+    - **MANDATORIO:** Para nuevos proyectos Next.js, el desarrollo frontend DEBE utilizar el siguiente stack:
+      - **TypeScript:** Todo el código frontend DEBE estar escrito en TypeScript.
+      - **Tailwind CSS:** Para la estilización de componentes.
+      - **Shadcn/ui:** Como librería de componentes UI base, construida sobre Tailwind CSS y Radix UI. Se deben seguir las convenciones de Shadcn/ui para la integración y personalización de componentes.
+
+- Next.js: Seguridad General
+- Variables de Entorno: Utilice variables de entorno para gestionar secretos y configuraciones.
+  - Variables expuestas al navegador DEBEN tener el prefijo `NEXT_PUBLIC_`.
+  - Variables sin este prefijo solo están disponibles en el lado del servidor (ej. `getServerSideProps`, API routes).
+  - No almacene secretos directamente en el código ni los exponga innecesariamente al cliente.
+- API Routes: Trate las rutas API (`pages/api`) como cualquier endpoint de backend.
+  - Valide y sanitice todas las entradas.
+  - Implemente autenticación y autorización robustas.
+  - Use manejo de errores adecuado; no exponga detalles sensibles.
+  - Proteja contra CSRF si usan cookies para autenticación (ej. con el patrón de doble submit cookie o tokens en cabeceras).
+- Server-Side Rendering (SSR) y Static Site Generation (SSG):
+  - Al usar `getServerSideProps` o `getStaticProps`, asegúrese de que cualquier dato obtenido de fuentes externas sea sanitizado si se va a renderizar directamente como HTML (similar a `dangerouslySetInnerHTML` en React).
+  - Tenga cuidado con la información que se serializa y se envía al cliente como parte de los props de la página.
+- Headers de Seguridad: Configure cabeceras de seguridad. Puede usar un middleware personalizado en Next.js (ej. en `middleware.js` o `middleware.ts`) o configurar su servidor/proxy inverso.
+  - `Content-Security-Policy` (CSP): Defina una política estricta.
+  - `Strict-Transport-Security` (HSTS)
+  - `X-Content-Type-Options`
+  - `X-Frame-Options`
+  - `Referrer-Policy`
+- Mantenga Next.js y sus dependencias actualizadas.
+- Evite múltiples instancias de Prisma Client en desarrollo con Next.js (use un singleton global) para prevenir agotamiento de conexiones. Aunque no es una vulnerabilidad directa, afecta la estabilidad.
+
+- Gestión de Estado Global y Cache de API en Proyectos Next.js (MANDATORIO):
+- Para la gestión del estado global de la aplicación o si se requiere cache para datos provenientes de una API (especialmente en interacciones del lado del cliente post-hidratación), SIEMPRE utilice Redux con Redux Toolkit y RTK Query.
+- NO utilice otras librerías o herramientas para la gestión de estado global (ej. Context API para estados complejos y compartidos globalmente que requieran optimizaciones de rendimiento o middlewares) o para el cacheo de datos de API (ej. SWR, React Query) cuando Redux Toolkit y RTK Query sean aplicables y cumplan los requisitos del proyecto.
+- Redux Toolkit (`configureStore`, `createSlice`) debe usarse para la configuración del store y la creación de reducers/actions. Considere cómo inicializar el estado de Redux en el servidor para SSR/SSG y cómo hidratarlo en el cliente.
+- RTK Query (`createApi`, hooks autogenerados) debe usarse para el fetching, caching, e invalidación de datos de API del lado del cliente. Para SSR/SSG con RTK Query, investigue patrones para pre-cargar datos en el servidor.
+- Siga las mejores prácticas para Redux Toolkit y RTK Query definidas en sus respectivos archivos de reglas.
+- El estado local del componente (`useState`, `useReducer`) sigue siendo apropiado para datos no compartidos o específicos de un componente.

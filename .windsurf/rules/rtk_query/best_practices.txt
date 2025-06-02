@@ -1,0 +1,32 @@
+- RTK Query: Mejores Prácticas para Data Fetching y Caching
+- Definición de API Slice:
+  - Use `createApi` de `@reduxjs/toolkit/query` o `@reduxjs/toolkit/query/react` para definir un "API slice".
+  - Especifique `baseUrl` y los `endpoints` para sus operaciones de datos (queries y mutations).
+- Endpoints:
+  - Para `query` endpoints, defina una función `query` que devuelva la URL (o un objeto con url, method, body).
+  - Para `mutation` endpoints, defina una función `query` similar.
+  - Use la función `transformResponse` para dar forma a los datos de la respuesta antes de que se almacenen en caché.
+- Hooks Autogenerados:
+  - RTK Query genera automáticamente hooks React para cada endpoint (ej. `useGetPostsQuery`, `useUpdatePostMutation`). Úselos en sus componentes.
+  - Estos hooks manejan el ciclo de vida de la petición (loading, data, error), el caching y el refetching.
+- Caching Automático:
+  - RTK Query cachea automáticamente los datos de las `query`. Las solicitudes subsecuentes con los mismos parámetros devolverán datos cacheados.
+  - Configure `keepUnusedDataFor` para controlar cuánto tiempo se mantienen los datos en caché después de que ningún componente los esté utilizando.
+- Invalidación de Caché y Refetching:
+  - Use `providesTags` en los `query` endpoints y `invalidatesTags` en los `mutation` endpoints para automatizar la invalidación de caché y el refetching de datos después de una mutación.
+  - Defina tipos de tags para categorizar sus datos (ej. 'Post', 'User').
+  - Una mutación que `invalidatesTags: ['Post']` causará que todas las queries que `providesTags: ['Post']` (o un tag específico como `{type: 'Post', id: 'LIST'}`) se vuelvan a ejecutar.
+- Mutaciones:
+  - Los hooks de mutación devuelven un array con una función trigger y un objeto con el estado de la mutación (`isLoading`, `isSuccess`, `isError`, `data`).
+- Optimistic Updates:
+  - Para una mejor UX, implemente optimistic updates usando `onQueryStarted` en la definición del endpoint de la mutación.
+  - Actualice manualmente la caché con el resultado esperado antes de que la mutación se complete. Si la mutación falla, revierta la actualización.
+- Manejo de Errores:
+  - Los hooks de RTK Query devuelven un estado de `error`. Maneje estos errores en sus componentes para mostrar mensajes al usuario.
+  - Puede usar `transformErrorResponse` para normalizar errores.
+- Integración con Redux Store:
+  - Añada el reducer y el middleware del API slice a su `configureStore`.
+  - `reducerPath`: Define dónde residirá el estado de RTK Query en su store Redux.
+- Streaming Updates (ej. WebSockets):
+  - RTK Query puede integrarse con WebSockets u otras técnicas de streaming para actualizar la caché en tiempo real usando `onCacheEntryAdded`.
+- Code Splitting: Puede dividir la definición de su API en múltiples archivos usando `api.injectEndpoints`.

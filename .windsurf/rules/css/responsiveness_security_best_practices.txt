@@ -1,0 +1,30 @@
+- CSS: Responsividad, Seguridad y Mejores Prácticas
+- Seguridad - Evitar `expression()`: Nunca use la propiedad `expression()` (específica de IE antiguo), ya que permite ejecutar JavaScript y es una vulnerabilidad de seguridad.
+- Seguridad - Sanitización de Entradas: Si los valores de CSS o nombres de clases se generan dinámicamente a partir de entradas del usuario (lo cual debe evitarse), sanitice rigurosamente dichas entradas para prevenir inyección de CSS o XSS a través de atributos `style`.
+- Seguridad - Content Security Policy (CSP): Use la directiva `style-src` de CSP para controlar las fuentes de estilos permitidas (ej. `'self'`, dominios específicos, nonces, hashes). Evite `unsafe-inline` si es posible.
+- Responsividad - Mobile-First: Diseñe primero para pantallas pequeñas y luego escale hacia arriba añadiendo complejidad para pantallas más grandes.
+- Responsividad - Unidades Relativas:
+  - Use unidades relativas como `em`, `rem` para tipografía y espaciado, permitiendo que los elementos escalen con el tamaño de fuente base del usuario.
+  - Use `%`, `vw`, `vh` para dimensiones de layout que necesiten adaptarse al viewport.
+- Responsividad - Layouts Fluidos:
+  - Utilice Flexbox (`display: flex`) y CSS Grid (`display: grid`) para crear layouts flexibles y adaptables que se reorganicen bien en diferentes tamaños de pantalla.
+  - Evite anchos fijos para contenedores principales; use `max-width` en su lugar.
+- Responsividad - Media Queries:
+  - Use media queries (`@media`) para aplicar estilos específicos basados en características del dispositivo como ancho/alto del viewport, orientación, resolución, etc.
+  - Defina breakpoints lógicos basados en el contenido, no en dispositivos específicos.
+- Responsividad - Imágenes Responsivas:
+  - Use `max-width: 100%; height: auto;` para que las imágenes escalen dentro de sus contenedores.
+  - Considere el elemento `<picture>` o el atributo `srcset` en `<img>` para servir diferentes tamaños de imagen según la resolución del viewport o la densidad de píxeles.
+- Responsividad - Tipografía Adaptable: Asegúrese de que el texto sea legible en todos los tamaños de pantalla. Use `font-size` adaptable (ej. con `rem` y media queries) y longitudes de línea adecuadas.
+- Responsividad - Puntos de Contacto (Touch Targets): En dispositivos táctiles, asegúrese de que los elementos interactivos (botones, enlaces) sean lo suficientemente grandes y tengan suficiente espaciado para ser fácilmente presionados sin errores. (Mínimo 44x44px CSS).
+- Responsividad - Pruebas Exhaustivas: Pruebe su diseño en múltiples navegadores, dispositivos y tamaños de pantalla, incluyendo emuladores y dispositivos físicos.
+- Mejores Prácticas - Organización y Mantenibilidad:
+  - Considere metodologías como BEM, SMACSS, OOCSS para organizar su CSS en proyectos grandes.
+  - Comente su código CSS, especialmente las partes complejas o las decisiones de diseño.
+- Mejores Prácticas - Selectores Eficientes: Use selectores CSS que sean eficientes y no demasiado específicos para evitar la "guerra de especificidad" y facilitar la sobrescritura.
+- Mejores Prácticas - Minimizar `!important`: Use `!important` solo como último recurso cuando no haya otra forma de anular un estilo debido a especificidad o fuentes externas.
+- Mejores Prácticas - Variables CSS (Custom Properties): Use variables CSS (`--nombre-variable: valor;`) para temas, valores repetidos y para facilitar cambios globales.
+- Mejores Prácticas - Rendimiento:
+  - Minimice y comprima sus archivos CSS en producción.
+  - Evite selectores universales (`*`) o selectores de atributos muy costosos en reglas de alto tráfico.
+  - Cargue CSS crítico de forma temprana.

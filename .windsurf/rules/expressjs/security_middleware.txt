@@ -1,0 +1,18 @@
+- Express.js: Middleware de Seguridad
+- Utilice el middleware `helmet` para establecer cabeceras HTTP de seguridad importantes (X-XSS-Protection, Strict-Transport-Security, X-Frame-Options, X-Content-Type-Options, Content-Security-Policy, etc.).
+  - `app.use(helmet());`
+- Deshabilite la cabecera `X-Powered-By` para reducir la huella digital del servidor y dificultar que los atacantes identifiquen la tecnología subyacente.
+  - `app.disable('x-powered-by');`
+- Configure `csurf` (middleware CSRF) si está utilizando sesiones o cookies para la autenticación y no es una API sin estado consumida por clientes no-navegador. Asegúrese de que los tokens CSRF se manejen correctamente.
+- Implemente middleware para la validación y sanitización de entradas (ej. `express-validator`). Valide todos los datos de `req.body`, `req.query`, `req.params`.
+  - Regla Ejemplo: `body('email').isEmail().normalizeEmail()`
+  - Regla Ejemplo: `param('id').isUUID()`
+- Utilice middleware de limitación de velocidad (rate limiting) como `express-rate-limit` para protegerse contra ataques de fuerza bruta y DoS en endpoints de autenticación y otros sensibles.
+- Configure el middleware de manejo de cookies (`cookie-parser`) con opciones seguras si usa cookies:
+  - `httpOnly: true` (previene acceso desde JavaScript del lado del cliente)
+  - `secure: true` (solo enviar sobre HTTPS)
+  - `sameSite: 'Strict'` o `'Lax'` (mitiga CSRF)
+  - Firme las cookies si contienen información sensible o de sesión.
+- Implemente un middleware de manejo de errores centralizado y robusto al final de la pila de middleware para capturar y manejar errores de manera consistente.
+  - `app.use((err, req, res, next) => { ... });`
+- Para APIs, asegúrese de que el middleware `cors` esté configurado correctamente para permitir solicitudes solo desde los orígenes esperados. Evite `Access-Control-Allow-Origin: '*'`.

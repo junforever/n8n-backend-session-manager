@@ -1,0 +1,15 @@
+- Node.js: Seguridad General
+- Utilice cadenas de Promesas planas o async/await para evitar el "callback hell" y mejorar la legibilidad y mantenibilidad del código asíncrono.
+- Establezca límites en el tamaño de las solicitudes (request size limits) para prevenir ataques de agotamiento de recursos (DoS).
+- Evite bloquear el bucle de eventos (event loop) con operaciones síncronas largas. Use operaciones asíncronas para I/O y tareas intensivas en CPU si es posible (ej. worker threads).
+- Implemente un manejo robusto de errores y excepciones. Escuche el evento 'uncaughtException' para limpieza y salida controlada, pero evite continuar la ejecución normal tras una excepción no capturada.
+- Siempre escuche los eventos 'error' en EventEmitters (streams, conexiones de red, etc.) para evitar caídas no controladas.
+- Propague los errores correctamente en las funciones asíncronas y callbacks.
+- Active el modo estricto ('use strict';) en todos los archivos JavaScript para un código más seguro y robusto.
+- Utilice herramientas de análisis estático de seguridad (SAST) como ESLint con plugins de seguridad (eslint-plugin-security) para detectar vulnerabilidades temprano.
+- Mantenga las dependencias actualizadas (npm audit, dependabot) para mitigar riesgos de vulnerabilidades conocidas en paquetes de terceros.
+- Valide rigurosamente todas las entradas del usuario y datos externos para prevenir ataques de inyección (SQLi, NoSQLi, command injection, etc.). No confíe en los datos del cliente.
+- No exponga información sensible en mensajes de error. Utilice códigos de error genéricos o mensajes para el cliente y registre detalles completos en el servidor.
+- Gestione las variables de entorno de forma segura. No incluya secretos directamente en el código. Use archivos .env (ignorados por git) para desarrollo y secretos de entorno en producción.
+- Considere el principio de menor privilegio para los procesos de Node.js (ej. no ejecutar como root).
+- Implemente logging adecuado para auditoría y monitoreo de seguridad.

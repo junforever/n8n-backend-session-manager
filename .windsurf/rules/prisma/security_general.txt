@@ -1,0 +1,17 @@
+- Prisma: Seguridad General
+- Connection URL: Proteja su `DATABASE_URL`. Almacénela de forma segura en variables de entorno y nunca la exponga en el lado del cliente. No la incluya en el control de versiones.
+- Principio de Menor Privilegio (Database User): El usuario de base de datos en `DATABASE_URL` debe tener solo los permisos mínimos necesarios (SELECT, INSERT, UPDATE, DELETE en tablas específicas). Evite usar superusuarios.
+- Input Validation: Aunque Prisma ayuda a prevenir SQLi con consultas parametrizadas, valide y sanitice TODAS las entradas del usuario en su capa de aplicación ANTES de pasarlas a Prisma Client, especialmente para `create` y `update`.
+- Raw Queries (`$queryRaw`, `$executeRaw`): Úselas con extrema precaución.
+  - Siempre utilice la forma de plantilla etiquetada `Prisma.sql\`...\` o `Prisma.empty` junto con `$queryRawUnsafe` o `$executeRawUnsafe` para la parametrización de valores dinámicos.
+  - Ejemplo seguro: `await prisma.$queryRaw(Prisma.sql\`SELECT * FROM User WHERE id = \${userId}\`)`
+  - NUNCA construya consultas raw concatenando strings con entradas del usuario.
+- Data Exposure: Sea selectivo con los datos que consulta y devuelve al cliente. Use `select` o `include` para obtener solo los campos necesarios. No exponga campos sensibles (ej. hashes de contraseñas).
+- Error Handling: Implemente un manejo de errores robusto para las operaciones de Prisma. No filtre detalles sensibles o stack traces al cliente. Registre los errores en el servidor.
+- Dependency Management: Mantenga Prisma Client (`@prisma/client`) y otras dependencias relacionadas actualizadas (`npm audit`).
+- Prisma Client Instantiation: En entornos como Next.js (desarrollo), evite crear múltiples instancias de `PrismaClient` para prevenir el agotamiento de conexiones. Use un patrón singleton global.
+  - `import { PrismaClient } from '@prisma/client';`
+  - `const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined };`
+  - `export const prisma = globalForPrisma.prisma ?? new PrismaClient();`
+  - `if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;`
+- SSL/TLS for Database Connection: Asegure la conexión entre su aplicación y la base de datos usando SSL/TLS. Configure los parámetros SSL en su `DATABASE_URL` si es necesario (ej. `?sslmode=require`).

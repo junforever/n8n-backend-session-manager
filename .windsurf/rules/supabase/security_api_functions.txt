@@ -1,0 +1,12 @@
+- Supabase: Seguridad de API y Funciones PostgreSQL
+- Acceso a Columnas (Column Level Security - CLS): Aunque RLS controla filas, use `SELECT` específicos en sus consultas para no exponer columnas sensibles innecesariamente. En funciones PostgreSQL, no seleccione `*`.
+- Funciones PostgreSQL (`SECURITY DEFINER` vs `SECURITY INVOKER`):
+  - `SECURITY INVOKER` (por defecto): La función se ejecuta con los permisos del usuario que la llama. Generalmente más seguro.
+  - `SECURITY DEFINER`: La función se ejecuta con los permisos del usuario que la definió (creador). Úselo con extrema precaución, solo cuando sea necesario elevar privilegios temporalmente (ej. para escribir en una tabla de auditoría a la que el usuario llamante no tiene acceso directo).
+  - Para funciones `SECURITY DEFINER`, establezca explícitamente un `search_path` seguro para evitar que se ejecuten funciones de esquemas no confiables: `ALTER FUNCTION your_function_name() SET search_path = public, extensions;` (o el mínimo necesario).
+  - No exponga funciones `SECURITY DEFINER` directamente a través de la API pública a menos que estén diseñadas específicamente para ello y sean seguras.
+- Endpoints de API: Considere deshabilitar el acceso directo a tablas a través de la API de PostgREST si toda la interacción debe pasar por funciones RPC personalizadas. `pgrst.db_anon_role`.
+- Validación de Entradas: Valide y sanitice todas las entradas en sus funciones PostgreSQL, especialmente si construyen consultas dinámicas (aunque esto debe evitarse en favor de consultas parametrizadas).
+- Principio de Menor Privilegio: Para los roles de base de datos (incluido el rol que usa PostgREST para acceder a su esquema), otorgue solo los permisos mínimos necesarios sobre esquemas, tablas, funciones, etc.
+- Seguridad de Almacenamiento (Storage): Utilice RLS en los buckets de Supabase Storage para controlar quién puede acceder, subir o eliminar archivos. Las políticas se basan en `auth.uid()` y metadatos del objeto.
+- Extensiones de PostgreSQL: Revise la seguridad de las extensiones que habilita. Use `pg_safeupdate` para prevenir `UPDATE` o `DELETE` sin `WHERE` clause.

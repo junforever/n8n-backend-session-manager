@@ -1,0 +1,21 @@
+- JavaScript: Seguridad y Mejores Prácticas Generales
+- Modo Estricto: Utilice siempre 'use strict'; al inicio de sus scripts o funciones para un código más seguro y robusto.
+- Validación de Entradas: Valide y sanitice rigurosamente TODAS las entradas del usuario o de fuentes externas antes de usarlas, especialmente para prevenir DOM XSS.
+- Manipulación Segura del DOM:
+  - Prefiera `textContent` sobre `innerHTML` para insertar texto.
+  - Si necesita insertar HTML desde una fuente controlada, asegúrese de que esté sanitizado. Para contenido generado por el usuario, use librerías como DOMPurify si es absolutamente necesario renderizar HTML.
+  - Use `createElement` y `appendChild` para construir elementos dinámicamente de forma segura.
+- Evite `eval()` y `new Function()`: Nunca use `eval()` o `new Function(string)` con cadenas de origen desconocido o no confiable debido a riesgos de ejecución de código arbitrario.
+- API Calls Seguras:
+  - Realice todas las llamadas a API sobre HTTPS.
+  - Maneje las respuestas de la API de forma segura, validando los datos recibidos.
+  - NUNCA incruste API keys o secretos directamente en el código JavaScript del lado del cliente. Obténgalos de un backend seguro o use tokens de corta duración.
+- Almacenamiento Seguro:
+  - Para cookies, use los atributos `HttpOnly`, `Secure` y `SameSite` (Lax o Strict).
+  - Evite almacenar información sensible (como tokens JWT de sesión) en `localStorage` o `sessionStorage` debido a su susceptibilidad a XSS. Prefiera cookies `HttpOnly` o almacenamiento en memoria de la aplicación.
+- Content Security Policy (CSP): Implemente CSP para mitigar XSS y otros ataques de inyección. Defina políticas estrictas para `script-src`, `object-src`, etc.
+- Manejo de Errores: Use `try...catch` para manejar errores de forma controlada. No exponga detalles sensibles de errores al usuario en el frontend.
+- Dependencias: Si usa librerías de terceros, manténgalas actualizadas y audite sus vulnerabilidades regularmente.
+- Alcance de Variables: Use `let` y `const` en lugar de `var` para un mejor control del alcance y evitar hoisting problemático.
+- Asincronía: Utilice `Promises` y `async/await` para manejar operaciones asíncronas de forma clara y evitar el "callback hell".
+- Organización del Código: Utilice módulos (ES6 Modules) para organizar el código de forma lógica y mantenible.

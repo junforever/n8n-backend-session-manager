@@ -1,0 +1,25 @@
+- Redux Toolkit (RTK): Mejores Prácticas (Forma recomendada para usar Redux)
+- `configureStore`:
+  - Use `configureStore` en lugar del `createStore` de Redux core.
+  - Automáticamente configura Redux DevTools Extension, middleware como Redux Thunk, y verificaciones de inmutabilidad y serialización en desarrollo.
+  - Simplifica la combinación de reductores.
+- `createSlice`:
+  - Use `createSlice` para generar automáticamente creadores de acciones y tipos de acción, y para escribir reductores de manera más concisa.
+  - Utiliza Immer internamente, permitiendo escribir lógica de actualización "mutativa" que se convierte en actualizaciones inmutables seguras.
+  - Ejemplo: `state.value += 1;` dentro de un reducer de `createSlice` es seguro.
+  - Exporte los creadores de acciones generados y el reductor desde el slice.
+- `createAsyncThunk`:
+  - Use `createAsyncThunk` para manejar lógica asíncrona (ej. llamadas a API) y despachar acciones basadas en el ciclo de vida de la Promise (`pending`, `fulfilled`, `rejected`).
+  - Integre los casos de estas acciones en sus `extraReducers` dentro de `createSlice` o usando el builder API.
+- `createEntityAdapter`:
+  - Use `createEntityAdapter` para manejar datos normalizados en el store, proporcionando CRUD predefinido y selectores.
+- Selectores con `createSelector`:
+  - Aunque RTK no incluye `reselect` directamente, es una práctica común usarlo con RTK para selectores memoizados. `createSelector` de `reselect` es la herramienta estándar.
+- Tipado con TypeScript:
+  - RTK está diseñado con TypeScript en mente. Aproveche el fuerte tipado para sus estados, acciones y thunks.
+  - Defina tipos para su `RootState` y `AppDispatch` y úselos en toda la aplicación.
+- Middleware:
+  - `configureStore` incluye middleware útil por defecto.
+  - Puede agregar middleware personalizado, como `rtkQuery.middleware` si usa RTK Query.
+- DevTools: Asegúrese de que Redux DevTools Extension esté habilitada en su navegador para una depuración eficiente.
+- No abuse de Redux: No todo el estado de la aplicación necesita estar en Redux. El estado local del componente (`useState`, `useReducer`) sigue siendo útil para datos que no son compartidos globalmente o que son específicos de un componente.
