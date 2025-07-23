@@ -122,9 +122,9 @@ This section provides a brief overview of all the available API routes in this a
 - `GET /auth/validate`: Validates the current request's session (implementation specific).
 - `POST /auth/block-user`: Blocks a user (implementation specific).
 
-### Sanitize Routes (`/sanitize`)
+### Rate Limit Routes (`/rate-limit`)
 
-- `POST /sanitize/`: Endpoint for input sanitization (implementation specific).
+- `GET /rate-limit/check`: Endpoint to verify rate limit status. **Note:** This is the only route where rate limit verification is performed. Rate limiting is not enforced on other routes.
 
 --
 
