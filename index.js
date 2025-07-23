@@ -2,8 +2,9 @@ import express from 'express';
 import timeout from 'connect-timeout';
 
 import { authRouter } from './routes/authRouter.js';
-import { sanitizeRouter } from './routes/sanitizeRouter.js';
+//import { sanitizeRouter } from './routes/sanitizeRouter.js';
 import { rootRouter } from './routes/rootRouter.js';
+import { rateLimitRouter } from './routes/rateLimitRouter.js';
 
 import { requestLogger } from './middleware/logger.js';
 import { limiter } from './middleware/rateLimit.js';
@@ -29,14 +30,17 @@ app.use(requestLogger);
 // Middleware para validar el token de conexión
 app.use(validateConnectionToken);
 
+// Middleware para manejo de rutas de root
+app.use('/', rootRouter);
+
+// Ruta específica para verificar rate limit (solo con middlewares mínimos)
+app.use('/rate-limit', limiter, rateLimitRouter);
+
 // Middleware para validar los encabezados requeridos
 app.use(validateRequestHeaders);
 
 // Middleware para validar las conexiones bloqueadas
 app.use(validateBlockedConnections);
-
-// Middleware para controlar el limite de peticiones por usuario
-app.use(limiter);
 
 // Middleware para controlar el tiempo maximo de espera por cada petición
 app.use(timeout(process.env.REQUEST_TIMEOUT || '15s'));
@@ -64,14 +68,11 @@ app.use(jsonErrorHandler);
 // Middleware para sanitizar todo lo que llega por body
 app.use(sanitizeRequest);
 
-// Middleware para manejo de rutas de root
-app.use('/', rootRouter);
-
 // Middleware para manejo de rutas de autenticacion
 app.use('/auth', authRouter);
 
 // Middleware para manejo de rutas de sanitizacion
-app.use('/sanitize', sanitizeRouter);
+//app.use('/sanitize', sanitizeRouter);
 
 // Middleware para rutas invalidas
 app.use(invalidRoute);
